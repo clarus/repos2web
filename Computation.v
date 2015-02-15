@@ -29,21 +29,17 @@ End Command.
 Module C.
   (** A computation can either return a pure value, or do a system call and wait
       for the answer to run another computation. *)
-  Inductive t : Type -> Type :=
-  | Ret : forall {A : Type} (x : A), t A
-  | Call : forall {A : Type} (command : Command.t),
-    (Command.answer command -> t A) -> t A
-  | Join : forall {A B : Type}, t A -> t B -> t (A * B).
+  Inductive t (A : Type) : Type :=
+  | Ret : forall (x : A), t A
+  | Call : forall (command : Command.t), (Command.answer command -> t A) -> t A.
+  Arguments Ret {A} _.
+  Arguments Call {A} _ _.
 
   (** Some optional notations. *)
   Module Notations.
     (** A nicer notation for `Ret`. *)
     Definition ret {A : Type} (x : A) : t A :=
       Ret x.
-
-    (** A nicer notation for `Join`. *)
-    Definition join {A B : Type} (x : t A) (y : t B) : t (A * B) :=
-      Join x y.
 
     (** We define an explicit apply function so that Coq does not try to expand
         the notations everywhere. *)
