@@ -44,4 +44,11 @@ Definition packages {A : Type} (repository : LString.t)
   end.
 
 Definition main : C.t unit :=
+  let! packages := packages @@ LString.s "repo-stable" in
+  let message :=
+    LString.s match packages with
+    | None => "None"
+    | Some _ => "Some"
+    end in
+  do_call! Command.Log message in
   ret tt.
