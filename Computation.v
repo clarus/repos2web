@@ -9,7 +9,7 @@ Module Command.
   (** List the folders of a directory. *)
   | ListFolders (directory : LString.t)
   (** Update (or create) a file with some content. *)
-  | UpdateFile (file_name : LString.t) (content : LString.t)
+  | WriteFile (file_name : LString.t) (content : LString.t)
   (** Evaluate a command. *)
   | Eval (command : LString.t)
   (** Write a message on the standard output. *)
@@ -19,7 +19,7 @@ Module Command.
   Definition answer (command : t) : Type :=
     match command with
     | ListFolders _ => option (list LString.t)
-    | UpdateFile _ _ => bool
+    | WriteFile _ _ => bool
     | Eval _ => option LString.t
     | Log _ => unit
     end.
