@@ -10,14 +10,15 @@ Local Open Scope char.
 
 Module Packages.
   (** List the files in a folder starting with `coq`. *)
-  Definition list_files (folder : LString.t) : C.t (option (list LString.t)) :=
+  Definition list_files (folder : LString.t) {A : Type}
+    (k : option (list LString.t) -> C.t A) : C.t A :=
     call! names := Command.ListFiles folder in
     match names with
     | None =>
       do_call! Command.Log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
-      ret None
+      k None
     | Some names =>
-      ret @@ Some (names |> List.filter (fun name =>
+      k @@ Some (names |> List.filter (fun name =>
         match name with
         | "c" :: "o" :: "q" :: _ => true
         | _ => false
@@ -25,45 +26,40 @@ Module Packages.
     end.
 
   Definition versions_of_package (repository : LString.t) (package : LString.t)
-    : C.t (option (list LString.t)) :=
+    {A : Type} (k : option (list LString.t) -> C.t A) : C.t A :=
      let package_folder := repository ++ LString.s "/" ++ package in
     let! versions := list_files package_folder in
     match versions with
-    | None => ret None
+    | None => k None
     | Some versions =>
-      ret @@ List.fold_left (fun (versions : option _) (version : LString.t) =>
-        match (versions, LString.split_limit version "." 2) with
-        | (Some versions, [_; version]) => Some (version :: versions)
-        | _ => None
+      k @@ Some (List.fold_left (fun versions version =>
+        match LString.split_limit version "." 2 with
+        | [_; version] => version :: versions
+        | _ => versions
         end)
-        (versions : list LString.t) (Some [])
+        versions [])
     end.
 
   Fixpoint versions_of_packages (repository : LString.t)
-    (packages : list LString.t)
-    : C.t (option (list (LString.t * list LString.t))) :=
+    (packages : list LString.t) {A : Type}
+    (k : option (list (LString.t * list LString.t)) -> C.t A) : C.t A :=
     match packages with
-    | [] => ret (Some [])
+    | [] => k (Some [])
     | package :: packages =>
-      let base_name := List.last (LString.split package "/") [] in
-      match package with
-      | "c" :: "o" :: "q" :: _ =>
-        let! versions := versions_of_package repository package in
-        let! next := versions_of_packages repository packages in
-        match (versions, next) with
-        | (Some versions, Some next) => ret @@ Some ((package, versions) :: next)
-        | _ => ret None
-        end
-      | _ => versions_of_packages repository packages
+      let! versions := versions_of_package repository package in
+      let! next := versions_of_packages repository packages in
+      match (versions, next) with
+      | (Some versions, Some next) => k @@ Some ((package, versions) :: next)
+      | _ => k None
       end
     end.
 
-  Definition packages (repository : LString.t)
-    : C.t (option (list (LString.t * list LString.t))) :=
+  Definition packages (repository : LString.t) {A : Type}
+    (k : option (list (LString.t * list LString.t)) -> C.t A) : C.t A :=
     let! packages := list_files repository in
     match packages with
-    | None => ret None
-    | Some packages => versions_of_packages repository packages
+    | None => k None
+    | Some packages => versions_of_packages repository packages k
     end.
 
   Definition to_string (packages : list (LString.t * list LString.t))
@@ -74,7 +70,7 @@ Module Packages.
 End Packages.
 
 Definition main : C.t unit :=
-  let! packages := Packages.packages @@ LString.s "repo-stable/packages" in
+  let! packages := Packages.packages (LString.s "repo-stable/packages") in
   match packages with
   | None =>
     do_call! Command.Log @@ LString.s "The packages cannot be listed." in
