@@ -79,7 +79,7 @@ Module C.
       (at level 200, x ident, X at level 100, A at level 200, Y at level 200).
 
     (** Let ignoring the answer. *)
-    Notation "'do_let!' X 'in' Y" :=
+    Notation "'do!' X 'in' Y" :=
       (bind X (fun _ => Y))
       (at level 200, X at level 100, Y at level 200).
   End Notations.
