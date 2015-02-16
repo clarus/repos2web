@@ -47,9 +47,12 @@ Module C.
     Definition ret {A : Type} (x : A) : t A :=
       Ret x.
 
-    (** We define an explicit apply function so that Coq does not try to expand
-        the notations everywhere. *)
-    Definition apply {A B} (f : A -> B) (x : A) := f x.
+    Fixpoint bind {A B : Type} (x : t A) (f : A -> t B) : t B :=
+      match x with
+      | Ret x => f x
+      | Call command handler =>
+        Call command (fun answer => bind (handler answer) f)
+      end.
 
     (** System call. *)
     Notation "'call!' answer ':=' command 'in' X" :=
@@ -66,21 +69,18 @@ Module C.
       (Call command (fun _ => X))
       (at level 200, command at level 100, X at level 200).
 
-    (** This notation is useful to compose computations which wait for a
-        continuation. We do not have an explicit bind operator to simplify the
-        language and the proofs. *)
     Notation "'let!' x ':=' X 'in' Y" :=
-      (apply X (fun x => Y))
+      (bind X (fun x => Y))
       (at level 200, x ident, X at level 100, Y at level 200).
 
     (** Let with a typed answer. *)
     Notation "'let!' x : A ':=' X 'in' Y" :=
-      (apply X (fun (x : A) => Y))
+      (bind X (fun (x : A) => Y))
       (at level 200, x ident, X at level 100, A at level 200, Y at level 200).
 
     (** Let ignoring the answer. *)
     Notation "'do_let!' X 'in' Y" :=
-      (apply X (fun _ => Y))
+      (bind X (fun _ => Y))
       (at level 200, X at level 100, Y at level 200).
   End Notations.
 End C.
