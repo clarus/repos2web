@@ -22,12 +22,23 @@ Module Run.
   | Intro : forall (B : Type) {x : C.t A}, (B -> t x) -> t x.
 End Run.
 
+Module RunM.
+  Definition t {A : Type} (Run_k : forall {B} (k : A -> C.t B), Type)
+    (x : M.t A) : Type :=
+    forall (B : Type) (k : A -> C.t B), Run_k k -> Run.t (x B k).
+End RunM.
+
 Module Packages.
   Import Run.
 
   Definition versions_of_package_wrong (repository : LString.t)
+    (package : LString.t)
+    : RunM.t (fun _ k => Run.t (k None)) (Packages.versions_of_package repository package).
+
+  (*Definition versions_of_package_wrong (repository : LString.t)
     (package : LString.t) {A : Type} {k : _ -> C.t A} (run_k : Run.t (k None))
-    : Run.t (Packages.versions_of_package repository package _ k).
+    : Run.t (Packages.versions_of_package repository package _ k).*)
+    intros A k run_k.
     apply (Call (Command.ListFiles _) None).
     apply (Call (Command.Log _) tt).
     apply run_k.
@@ -50,7 +61,7 @@ Module Packages.
     - apply (run_k []).
     - apply (versions_of_package_ok repository package); intro versions.
       apply versions_of_packages_ok; intro next.
-      apply (run_k _).
+      apply run_k.
   Defined.
 
   Definition packages_ok (repository : LString.t) {A : Type} {k : _ -> C.t A}
