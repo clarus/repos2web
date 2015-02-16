@@ -37,12 +37,18 @@ Module C.
       for the answer to run another computation. *)
   Inductive t (A : Type) : Type :=
   | Ret : forall (x : A), t A
-  | Call : forall (command : Command.t), (Command.answer command -> t A) -> t A.
+  | Call : forall (command : Command.t), (Command.answer command -> t A) -> t A
+  | Bind : forall (B : Type), t B -> (B -> t A) -> t A.
   Arguments Ret {A} _.
   Arguments Call {A} _ _.
+  Arguments Bind {A B} _ _.
 
   (** Some optional notations. *)
   Module Notations.
+    (** A nicer notation for `Ret`. *)
+    Definition ret {A : Type} (x : A) : t A :=
+      Ret x.
+
     (** System call. *)
     Notation "'call!' answer ':=' command 'in' X" :=
       (Call command (fun answer => X))
@@ -58,29 +64,18 @@ Module C.
       (Call command (fun _ => X))
       (at level 200, command at level 100, X at level 200).
 
-    (** We define an explicit apply function so that Coq does not try to expand
-        the notations everywhere. *)
-    Definition apply {A B} (f : A -> B) (x : A) := f x.
-
-    (** This notation is useful to compose computations which wait for a
-        continuation. We do not have an explicit bind operator to simplify the
-        language and the proofs. *)
     Notation "'let!' x ':=' X 'in' Y" :=
-      (apply (X _) (fun x => Y))
+      (Bind X (fun x => Y))
       (at level 200, x ident, X at level 100, Y at level 200).
 
     (** Let with a typed answer. *)
     Notation "'let!' x : A ':=' X 'in' Y" :=
-      (apply (X _) (fun (x : A) => Y))
+      (Bind X (fun (x : A) => Y))
       (at level 200, x ident, X at level 100, A at level 200, Y at level 200).
 
     (** Let ignoring the answer. *)
     Notation "'do_let!' X 'in' Y" :=
-      (apply (X _) (fun _ => Y))
+      (Bind X (fun _ => Y))
       (at level 200, X at level 100, Y at level 200).
   End Notations.
 End C.
-
-Module M.
-  Definition t (A : Type) : Type := forall (B : Type), (A -> C.t B) -> C.t B.
-End M.

@@ -14,28 +14,35 @@ Local Open Scope char.
     system calls. *)
 Module Run.
   (** We define a run by induction on the structure of a computation. *)
-  Inductive t {A : Type} : C.t A -> Type :=
-  | Ret : forall (x : A), t (C.Ret x)
-  | Call : forall (command : Command.t) (answer : Command.answer command)
-    {handler : Command.answer command -> C.t A}, t (handler answer) ->
-    t (C.Call command handler)
-  | Intro : forall (B : Type) {x : C.t A}, (B -> t x) -> t x.
+  Inductive t : forall {A : Type}, C.t A -> A -> Type :=
+  | Ret : forall {A : Type} (x : A), t (C.Ret x) x
+  | Call : forall {A : Type} (command : Command.t) (answer : Command.answer command)
+    {handler : Command.answer command -> C.t A} {x : A}, t (handler answer) x ->
+    t (C.Call command handler) x
+  | Bind : forall {A B : Type} {c_x : C.t B} {x : B} {c_f : B -> C.t A} {y : A},
+    t c_x x -> t (c_f x) y -> t (C.Bind c_x c_f) y
+  | Intro : forall {A : Type} (B : Type) {c : C.t A} {x : A}, (B -> t c x) -> t c x.
 End Run.
 
 Module Packages.
   Import Run.
 
-  Definition versions_of_package_wrong (repository : LString.t)
-    (package : LString.t) {A : Type} {k : _ -> C.t A} (run_k : Run.t (k None))
-    : Run.t (Packages.versions_of_package repository package _ k).
+  Definition list_files_ok (folder : LString.t) (files : list LString.t)
+    : Run.t (Packages.list_files folder) (Some (Packages.filter_coq_files files)).
+    apply (Call (Command.ListFiles folder) (Some files)).
+    apply Ret.
+  Defined.
+
+  (*Definition versions_of_package_wrong (repository : LString.t)
+    (package : LString.t)
+    : Run.t (Packages.versions_of_package repository package) None.
     apply (Call (Command.ListFiles _) None).
     apply (Call (Command.Log _) tt).
     apply run_k.
-  Defined.
+  Defined.*)
 
   Definition versions_of_package_ok (repository : LString.t)
-    (package : LString.t) {A : Type} {k : _ -> C.t A}
-    (run_k : forall versions, Run.t (k (Some versions)))
+    (package : LString.t) (files : list LString.t)
     : Run.t (Packages.versions_of_package repository package _ k).
     apply (Intro (list LString.t)); intro files.
     apply (Call (Command.ListFiles _) (Some files)).

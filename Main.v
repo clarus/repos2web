@@ -9,24 +9,25 @@ Import C.Notations.
 Local Open Scope char.
 
 Module Packages.
+  Definition filter_coq_files (files : list LString.t) : list LString.t :=
+    files |> List.filter (fun name =>
+      match name with
+      | "c" :: "o" :: "q" :: _ => true
+      | _ => false
+      end).
+
   (** List the files in a folder starting with `coq`. *)
-  Definition list_files (folder : LString.t) : M.t (option (list LString.t)) :=
-    fun _ ret =>
+  Definition list_files (folder : LString.t) : C.t (option (list LString.t)) :=
     call! names := Command.ListFiles folder in
     match names with
     | None =>
       do_call! Command.Log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
       ret None
-    | Some names =>
-      ret @@ Some (names |> List.filter (fun name =>
-        match name with
-        | "c" :: "o" :: "q" :: _ => true
-        | _ => false
-        end))
+    | Some names => ret @@ Some (filter_coq_files names)
     end.
 
   Definition versions_of_package (repository : LString.t) (package : LString.t)
-    : M.t (option (list LString.t)) := fun _ ret =>
+    : C.t (option (list LString.t)) :=
     let package_folder := repository ++ LString.s "/" ++ package in
     let! versions := list_files package_folder in
     match versions with
@@ -42,7 +43,7 @@ Module Packages.
 
   Fixpoint versions_of_packages (repository : LString.t)
     (packages : list LString.t)
-    : M.t (option (list (LString.t * list LString.t))) := fun _ ret =>
+    : C.t (option (list (LString.t * list LString.t))) :=
     match packages with
     | [] => ret (Some [])
     | package :: packages =>
@@ -55,7 +56,7 @@ Module Packages.
     end.
 
   Definition packages (repository : LString.t)
-    : M.t (option (list (LString.t * list LString.t))) := fun _ ret =>
+    : C.t (option (list (LString.t * list LString.t))) :=
     let! packages := list_files repository in
     match packages with
     | None => ret None
