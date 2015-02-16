@@ -43,17 +43,6 @@ Module C.
 
   (** Some optional notations. *)
   Module Notations.
-    (** A nicer notation for `Ret`. *)
-    Definition ret {A : Type} (x : A) : t A :=
-      Ret x.
-
-    (*Fixpoint bind {A B : Type} (x : t A) (f : A -> t B) : t B :=
-      match x with
-      | Ret x => f x
-      | Call command handler =>
-        Call command (fun answer => bind (handler answer) f)
-      end.*)
-
     (** System call. *)
     Notation "'call!' answer ':=' command 'in' X" :=
       (Call command (fun answer => X))
@@ -77,17 +66,21 @@ Module C.
         continuation. We do not have an explicit bind operator to simplify the
         language and the proofs. *)
     Notation "'let!' x ':=' X 'in' Y" :=
-      (apply X (fun x => Y))
+      (apply (X _) (fun x => Y))
       (at level 200, x ident, X at level 100, Y at level 200).
 
     (** Let with a typed answer. *)
     Notation "'let!' x : A ':=' X 'in' Y" :=
-      (apply X (fun (x : A) => Y))
+      (apply (X _) (fun (x : A) => Y))
       (at level 200, x ident, X at level 100, A at level 200, Y at level 200).
 
     (** Let ignoring the answer. *)
     Notation "'do_let!' X 'in' Y" :=
-      (apply X (fun _ => Y))
+      (apply (X _) (fun _ => Y))
       (at level 200, X at level 100, Y at level 200).
   End Notations.
 End C.
+
+Module M.
+  Definition t (A : Type) : Type := forall (B : Type), (A -> C.t B) -> C.t B.
+End M.
