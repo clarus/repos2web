@@ -25,54 +25,48 @@ End Run.
 Module Packages.
   Import Run.
 
-  (*Definition versions_of_package_ok (repository : LString.t)
-    (package : LString.t)
-    : Run.t (Packages.versions_of_package repository package).
-    apply (Intro (list LString.t)); intro files.
-    apply (Call (Command.ListFiles _) (Some files)).
-    apply (Ret (Some _)).
-  Defined.*)
-
-  Definition versions_of_package_ok_bind {A : Type} (repository : LString.t)
-    (package : LString.t) {k : option (list LString.t) -> C.t A}
-    (run_k : forall versions, Run.t (k (Some versions)))
-    : Run.t (Packages.versions_of_package repository package k).
-    apply (Intro (list LString.t)); intro files.
-    apply (Call (Command.ListFiles _) (Some files)).
-    apply (run_k _).
-  Defined.
-
-  (*Definition versions_of_package_wrong (repository : LString.t)
-    (package : LString.t)
-    : Run.t (Packages.versions_of_package repository package).
+  Definition versions_of_package_wrong (repository : LString.t)
+    (package : LString.t) {A : Type} {k : _ -> C.t A} (run_k : Run.t (k None))
+    : Run.t (Packages.versions_of_package repository package _ k).
     apply (Call (Command.ListFiles _) None).
     apply (Call (Command.Log _) tt).
-    apply (Ret None).
-  Defined.*)
+    apply run_k.
+  Defined.
 
-  Fixpoint versions_of_packages_ok_bind {A : Type} (repository : LString.t)
-    (packages : list LString.t)
-    {k : option (list (LString.t * list LString.t)) -> C.t A}
+  Definition versions_of_package_ok (repository : LString.t)
+    (package : LString.t) {A : Type} {k : _ -> C.t A}
+    (run_k : forall versions, Run.t (k (Some versions)))
+    : Run.t (Packages.versions_of_package repository package _ k).
+    apply (Intro (list LString.t)); intro files.
+    apply (Call (Command.ListFiles _) (Some files)).
+    apply run_k.
+  Defined.
+
+  Fixpoint versions_of_packages_ok (repository : LString.t)
+    (packages : list LString.t) {A : Type} {k : _ -> C.t A}
     (run_k : forall packages, Run.t (k (Some packages))) {struct packages}
-    : Run.t (Packages.versions_of_packages repository packages k).
+    : Run.t (Packages.versions_of_packages repository packages _ k).
     destruct packages as [|package packages].
     - apply (run_k []).
-    - apply (versions_of_package_ok_bind repository package); intro versions.
-      apply versions_of_packages_ok_bind; intro next.
+    - apply (versions_of_package_ok repository package); intro versions.
+      apply versions_of_packages_ok; intro next.
       apply (run_k _).
   Defined.
 
-  (*Definition packages_ok (repository : LString.t)
-    : Run.t (Packages.packages repository).
-    apply (Call (Command.ListFiles repository) None).
-    apply (Call (Command.Log _) tt).
-    apply (Ret None).
-  Defined.*)
+  Definition packages_ok (repository : LString.t) {A : Type} {k : _ -> C.t A}
+    (run_k : forall packages, Run.t (k (Some packages)))
+    : Run.t (Packages.packages repository _ k).
+    apply (Intro (list LString.t)); intro files.
+    apply (Call (Command.ListFiles repository) (Some files)).
+    apply versions_of_packages_ok.
+    apply run_k.
+  Defined.
 
-  (*Definition packages_wrong (repository : LString.t)
-    : Run.t (Packages.packages repository).
+  Definition packages_wrong (repository : LString.t) {A : Type} {k : _ -> C.t A}
+    (run_k : Run.t (k None))
+    : Run.t (Packages.packages repository _ k).
     apply (Call (Command.ListFiles repository) None).
     apply (Call (Command.Log _) tt).
-    apply (Ret None).
-  Defined.*)
+    apply run_k.
+  Defined.
 End Packages.
