@@ -4,7 +4,8 @@ Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
 Require Import ListString.All.
 Require Import Computation.
-Require Import Main.
+Require Main.
+Require Import Model.
 
 Import ListNotations.
 Import C.Notations.
@@ -24,12 +25,34 @@ Module Run.
   | Intro : forall {A : Type} (B : Type) {c : C.t A} {x : A}, (B -> t c x) -> t c x.
 End Run.
 
-Module Packages.
+Module Main.
   Import Run.
 
   Definition list_files_ok (folder : LString.t) (files : list LString.t)
-    : Run.t (Packages.list_files folder) (Some (Packages.filter_coq_files files)).
+    : Run.t (Main.list_files folder) (Some (Main.filter_coq_files files)).
     apply (Call (Command.ListFiles folder) (Some files)).
+    apply Ret.
+  Defined.
+
+  Lemma filter_coq_files_of_version_folders (package : Package.t)
+    : Main.filter_coq_files (Package.to_folders package) = Package.to_folders package.
+  Admitted.
+
+  Definition list_files_versions (folder : LString.t) (package : Package.t)
+    : Run.t (Main.list_files folder) (Some (Package.to_folders package)).
+    apply (Call (Command.ListFiles folder) (Some (Package.to_folders package))).
+    rewrite filter_coq_files_of_version_folders.
+    apply Ret.
+  Defined.
+
+  Lemma filter_coq_files_of_package_folders (packages : Packages.t)
+    : Main.filter_coq_files (Packages.to_folders packages) = Packages.to_folders packages.
+  Admitted.
+
+  Definition list_files_packages (folder : LString.t) (packages : Packages.t)
+    : Run.t (Main.list_files folder) (Some (Packages.to_folders packages)).
+    apply (Call (Command.ListFiles folder) (Some (Packages.to_folders packages))).
+    rewrite filter_coq_files_of_package_folders.
     apply Ret.
   Defined.
 
@@ -41,39 +64,36 @@ Module Packages.
     apply run_k.
   Defined.*)
 
-  Definition versions_of_package_ok (repository : LString.t)
-    (package : LString.t) (files : list LString.t)
-    : Run.t (Packages.versions_of_package repository package _ k).
-    apply (Intro (list LString.t)); intro files.
-    apply (Call (Command.ListFiles _) (Some files)).
-    apply run_k.
+  Definition package_of_name_ok (repository : LString.t)
+    (package : Package.t)
+    : Run.t (Main.package_of_name repository (Package.name package))
+      (Some package).
+    apply (Bind (list_files_versions _ package)).
+    rewrite Package.of_to_folders.
+    apply Ret.
   Defined.
 
-  Fixpoint versions_of_packages_ok (repository : LString.t)
-    (packages : list LString.t) {A : Type} {k : _ -> C.t A}
-    (run_k : forall packages, Run.t (k (Some packages))) {struct packages}
-    : Run.t (Packages.versions_of_packages repository packages _ k).
+  Fixpoint packages_of_names_ok (repository : LString.t) (packages : Packages.t)
+    : Run.t (Main.packages_of_names repository (List.map Package.name packages))
+      (Some packages).
     destruct packages as [|package packages].
-    - apply (run_k []).
-    - apply (versions_of_package_ok repository package); intro versions.
-      apply versions_of_packages_ok; intro next.
-      apply run_k.
+    - apply Ret.
+    - apply (Bind (package_of_name_ok repository package)).
+      apply (Bind (packages_of_names_ok repository packages)).
+      apply Ret.
   Defined.
 
-  Definition packages_ok (repository : LString.t) {A : Type} {k : _ -> C.t A}
-    (run_k : forall packages, Run.t (k (Some packages)))
-    : Run.t (Packages.packages repository _ k).
-    apply (Intro (list LString.t)); intro files.
-    apply (Call (Command.ListFiles repository) (Some files)).
-    apply versions_of_packages_ok.
-    apply run_k.
+  Definition packages_ok (repository : LString.t) (packages : Packages.t)
+    : Run.t (Main.packages repository) (Some packages).
+    apply (Bind (list_files_packages repository packages)).
+    apply (packages_of_names_ok repository packages).
   Defined.
 
-  Definition packages_wrong (repository : LString.t) {A : Type} {k : _ -> C.t A}
+  (*Definition packages_wrong (repository : LString.t) {A : Type} {k : _ -> C.t A}
     (run_k : Run.t (k None))
     : Run.t (Packages.packages repository _ k).
     apply (Call (Command.ListFiles repository) None).
     apply (Call (Command.Log _) tt).
     apply run_k.
-  Defined.
-End Packages.
+  Defined.*)
+End Main.
