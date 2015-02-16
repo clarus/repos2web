@@ -17,22 +17,8 @@ Module Run.
   | Ret : forall (x : A), t (C.Ret x)
   | Call : forall (command : Command.t) (answer : Command.answer command)
     {handler : Command.answer command -> C.t A}, t (handler answer) ->
-    t (C.Call command handler).
-
-  (** The final result of a run. *)
-  Fixpoint eval {A : Type} {x : C.t A} (run : t x) : A :=
-    match run with
-    | Ret x => x
-    | Call _ _ _ run => eval run
-    end.
-
-  (** The trace of a run. *)
-  Fixpoint trace {A : Type} {x : C.t A} (run : t x)
-    : list {command : Command.t & Command.answer command} :=
-    match run with
-    | Ret _ => []
-    | Call command answer _ run => existT _ command answer :: trace run
-    end.
+    t (C.Call command handler)
+  | Intro : forall (B : Type) {x : C.t A}, (B -> t x) -> t x.
 End Run.
 
 Module Packages.
