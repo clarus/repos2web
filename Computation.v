@@ -15,7 +15,7 @@ Module Command.
   (** Delete a file. *)
   | DeleteFile (file_name : LString.t)
   (** Evaluate a command. *)
-  | Eval (command : LString.t)
+  (* | Eval (command : LString.t) *)
   (** Write a message on the standard output. *)
   | Log (message : LString.t).
 
@@ -26,7 +26,7 @@ Module Command.
     | ReadFile _ => option LString.t
     | WriteFile _ _ => bool
     | DeleteFile _ => bool
-    | Eval _ => option LString.t
+    (* | Eval _ => option LString.t *)
     | Log _ => unit
     end.
 End Command.

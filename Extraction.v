@@ -74,7 +74,7 @@ Module Lwt.
   Parameter delete_file : String.t -> t bool.
   Extract Constant delete_file => "Utils.delete_file".
 
-  Parameter todo : forall {A : Type}, t A.
+  (* Parameter todo : forall {A : Type}, t A. *)
 End Lwt.
 
 (** Evaluate a command using Lwt. *)
@@ -93,8 +93,17 @@ Definition eval_command (c : Command.t) : Lwt.t (Command.answer c) :=
     Lwt.write_file file_name content
   | Command.DeleteFile file_name =>
     Lwt.delete_file @@ String.of_lstring file_name
-  | Command.Eval command => Lwt.todo
+  (* | Command.Eval command => Lwt.todo *)
   | Command.Log message =>
     let message := String.of_lstring message in
     Lwt.printl message
+  end.
+
+(** Evaluate an expression using Lwt. *)
+Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
+  match x with
+  | C.Ret x => Lwt.ret x
+  | C.Call command handler =>
+    Lwt.bind (eval_command command) (fun answer =>
+    eval @@ handler answer)
   end.

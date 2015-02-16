@@ -1,5 +1,9 @@
-style.min.css
 Makefile
+style.min.css
+extraction/_build
+extraction/repo2web.ml
+extraction/repo2web.mli
+extraction/repo2web.native
 *.glob
 *.v.d
 *.vo

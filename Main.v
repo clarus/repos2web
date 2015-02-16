@@ -52,3 +52,8 @@ Definition main : C.t unit :=
     end in
   do_call! Command.Log message in
   ret tt.
+
+Require Import Extraction.
+
+Definition repo2web : unit := Extraction.Lwt.run @@ Extraction.eval main.
+Extraction "extraction/repo2web" repo2web.
