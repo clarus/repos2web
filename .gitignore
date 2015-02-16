@@ -4,6 +4,7 @@ extraction/_build
 extraction/repo2web.ml
 extraction/repo2web.mli
 extraction/repo2web.native
+extraction/repo-stable
 *.glob
 *.v.d
 *.vo
