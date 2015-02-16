@@ -9,7 +9,7 @@ Import C.Notations.
 Definition versions_of_package {A : Type} (repository : LString.t)
   (package : LString.t) (k : option (list LString.t) -> C.t A) : C.t A :=
   let package_folder := repository ++ LString.s "/" ++ package in
-  call! versions := Command.ListFolders package_folder in
+  call! versions := Command.ListFiles package_folder in
   match versions with
   | None => k None
   | Some versions =>
@@ -37,7 +37,7 @@ Fixpoint versions_of_packages {A : Type} (repository : LString.t)
 
 Definition packages {A : Type} (repository : LString.t)
   (k : option (list (LString.t * list LString.t)) -> C.t A) : C.t A :=
-  call! packages := Command.ListFolders repository in
+  call! packages := Command.ListFiles repository in
   match packages with
   | None => k None
   | Some packages => versions_of_packages repository packages k
