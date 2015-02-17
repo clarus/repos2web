@@ -4,6 +4,7 @@ Require Import Coq.Strings.Ascii.
 Require Import ListString.All.
 Require Import FunctionNinjas.All.
 Require Import Model.
+Require Sort.
 
 Import ListNotations.
 
@@ -54,6 +55,11 @@ Definition row (package : FullPackage.t) : LString.t :=
   end.
 
 Definition table (packages : FullPackages.t) : LString.t :=
+  let packages := packages |> Sort.sort (fun a b =>
+    match LString.compare (FullPackage.name a) (FullPackage.name b) with
+    | Lt | Eq => true
+    | Gt => false
+    end) in
   LString.s
 "          <table class=""table table-striped text-center"">
             <thead>
