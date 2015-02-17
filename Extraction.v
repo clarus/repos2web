@@ -54,9 +54,9 @@ Module Lwt.
   Parameter run : forall {A : Type}, t A -> A.
   Extract Constant run => "Lwt_main.run".
 
-  (** Print a new line. *)
-  Parameter printl : String.t -> t unit.
-  Extract Constant printl => "Lwt_io.printl".
+  (** Print a message on the standard output. *)
+  Parameter print : String.t -> t bool.
+  Extract Constant print => "Utils.print".
 
   (** List the files of a directory. *)
   Parameter list_files : String.t -> t (option (list String.t)).
@@ -96,9 +96,9 @@ Definition eval_command (c : Command.t) : Lwt.t (Command.answer c) :=
   | Command.DeleteFile file_name =>
     Lwt.delete_file @@ String.of_lstring file_name
   | Command.System command => Lwt.system (String.of_lstring command)
-  | Command.Log message =>
+  | Command.Print message =>
     let message := String.of_lstring message in
-    Lwt.printl message
+    Lwt.print message
   end.
 
 (** Evaluate an expression using Lwt. *)

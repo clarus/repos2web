@@ -61,3 +61,10 @@ let system (command : string) : bool option Lwt.t =
     | Lwt_unix.WEXITED 0 | Lwt_unix.WSIGNALED 0 | Lwt_unix.WSTOPPED 0 -> true
     | Lwt_unix.WEXITED _ | Lwt_unix.WSIGNALED _ | Lwt_unix.WSTOPPED _ -> false)))
     (fun _ -> Lwt.return None)
+
+(** Print a message on the standard output. *)
+let print (message : string) : bool Lwt.t =
+  Lwt.catch (fun _ ->
+    Lwt.bind (Lwt_io.print message) (fun _ ->
+    Lwt.return true))
+    (fun _ -> Lwt.return false)

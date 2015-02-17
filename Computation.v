@@ -16,8 +16,8 @@ Module Command.
   | DeleteFile (file_name : LString.t)
   (** Run a command. *)
   | System (command : LString.t)
-  (** Write a message on the standard output. *)
-  | Log (message : LString.t).
+  (** Print a message on the standard output. *)
+  | Print (message : LString.t).
 
   (** The type of an answer for a command depends on the value of the command. *)
   Definition answer (command : t) : Type :=
@@ -27,7 +27,7 @@ Module Command.
     | WriteFile _ _ => bool
     | DeleteFile _ => bool
     | System _ => option bool
-    | Log _ => unit
+    | Print _ => bool
     end.
 End Command.
 
@@ -74,7 +74,7 @@ Module C.
       (at level 200, x ident, X at level 100, A at level 200, Y at level 200).
 
     (** Let ignoring the answer. *)
-    Notation "'do_let!' X 'in' Y" :=
+    Notation "'do!' X 'in' Y" :=
       (Let X (fun _ => Y))
       (at level 200, X at level 100, Y at level 200).
   End Notations.

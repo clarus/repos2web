@@ -54,12 +54,19 @@ Module FullPackage.
     versions : list Version.t;
     last_version : option Version.t}.
 
+  Definition last_version_hd (package : t) : t :=
+    let (name, versions, _) := package in
+    New name versions (List.hd_error versions).
+
   Definition basic (package : t) : Package.t :=
     Package.New (name package) (versions package |> List.map Version.id).
 End FullPackage.
 
 Module FullPackages.
   Definition t := list FullPackage.t.
+
+  Definition last_version_hd (packages : t) : t :=
+    List.map FullPackage.last_version_hd packages.
 
   Definition basic (packages : t) : Packages.t :=
     List.map FullPackage.basic packages.

@@ -10,6 +10,10 @@ Import ListNotations.
 Import C.Notations.
 Local Open Scope char.
 
+Definition log (message : LString.t) : C.t unit :=
+  do_call! Command.Print (message ++ [LString.Char.n]) in
+  ret tt.
+
 (** Get basic informations about the packages. *)
 Module Basic.
   Definition filter_coq_files (files : list LString.t) : list LString.t :=
@@ -24,7 +28,7 @@ Module Basic.
     call! names := Command.ListFiles folder in
     match names with
     | None =>
-      do_call! Command.Log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
+      do! log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
       ret None
     | Some names => ret @@ Some (filter_coq_files names)
     end.
@@ -68,7 +72,7 @@ Module Full.
     call! content := Command.ReadFile descr_path in
     match content with
     | None =>
-      do_call! Command.Log (descr_path ++ LString.s " not found.") in
+      do! log (descr_path ++ LString.s " not found.") in
       ret None
     | Some content => ret @@ Some (Version.New version content)
     end.
@@ -92,13 +96,15 @@ Module Full.
     let command := LString.s "dpkg --compare-versions " ++
       Version.id version1 ++ LString.s " ge " ++ Version.id version2 in
     call! is_success := Command.System command in
-    ret match is_success with
+    match is_success with
     | Some is_success =>
-      if is_success then
+      ret (if is_success then
         Some version1
       else
-        Some version2
-    | None => None
+        Some version2)
+    | None =>
+      do! log @@ LString.s "Cannot call the dpkg command." in
+      ret None
     end.
 
   Fixpoint last_version (versions : list Version.t) : C.t (option Version.t) :=
@@ -134,9 +140,7 @@ Definition main : C.t unit :=
   let repository := LString.s "repo-stable/packages" in
   let! packages := Basic.packages repository in
   match packages with
-  | None =>
-    do_call! Command.Log @@ LString.s "The packages cannot be listed." in
-    ret tt
+  | None => log @@ LString.s "The packages cannot be listed."
   | Some packages =>
     let! full_packages := Full.get_full_packages repository packages in
     let index := View.index full_packages in
