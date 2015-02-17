@@ -51,18 +51,8 @@ End Version.
 Module FullPackage.
   Record t := New {
     name : LString.t;
-    versions : list Version.t(*;
-    last_version : option Version.t*)}.
-
-  (*Fixpoint last_version_aux (versions : list Version.t) : option Version.t :=
-    match versions with
-    | [] => None
-    | version :: versions =>
-      match last_version_aux with
-      | None => version
-      | Some version' =>
-      end
-    end.*)
+    versions : list Version.t;
+    last_version : option Version.t}.
 
   Definition basic (package : t) : Package.t :=
     Package.New (name package) (versions package |> List.map Version.id).

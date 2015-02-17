@@ -42,10 +42,10 @@ Definition title (packages : FullPackages.t) : LString.t :=
 ".
 
 Definition row (package : FullPackage.t) : LString.t :=
-  let (name, versions) := package in
-  match versions with
-  | [] => LString.s ""
-  | version :: _ => LString.s
+  let (name, _, last_version) := package in
+  match last_version with
+  | None => LString.s ""
+  | Some version => LString.s
 "              <tr>
                 <td>" ++ name ++ LString.s "</td>
                 <td>" ++ Version.id version ++ LString.s "</td>
