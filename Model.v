@@ -52,8 +52,14 @@ Module FullPackage.
   Record t := New {
     name : LString.t;
     versions : list Version.t}.
+
+  Definition basic (package : t) : Package.t :=
+    Package.New (name package) (versions package |> List.map Version.id).
 End FullPackage.
 
 Module FullPackages.
   Definition t := list FullPackage.t.
+
+  Definition basic (packages : t) : Packages.t :=
+    List.map FullPackage.basic packages.
 End FullPackages.

@@ -102,8 +102,8 @@ Module Full.
     end.
 End Full.
 
-(*Definition main : C.t unit :=
-  let! packages := packages (LString.s "repo-stable/packages") in
+Definition main : C.t unit :=
+  let! packages := Basic.packages (LString.s "repo-stable/packages") in
   match packages with
   | None =>
     do_call! Command.Log @@ LString.s "The packages cannot be listed." in
@@ -116,4 +116,4 @@ End Full.
 Require Import Extraction.
 
 Definition repo2web : unit := Extraction.Lwt.run @@ Extraction.eval main.
-Extraction "extraction/repo2web" repo2web.*)
+Extraction "extraction/repo2web" repo2web.

@@ -103,4 +103,37 @@ End Basic.
 
 Module Full.
   Import Run.
+
+  Definition get_version_ok (repository name : LString.t) (version : Version.t)
+    : Run.t (Full.get_version repository name (Version.id version)) (Some version).
+    apply (Call (Command.ReadFile _) (Some (Version.description version))).
+    destruct version.
+    apply Ret.
+  Defined.
+
+  Fixpoint get_versions_ok (repository name : LString.t) (versions : list Version.t)
+    : Run.t (Full.get_versions repository name (List.map Version.id versions))
+      versions.
+    destruct versions as [|version versions].
+    - apply Ret.
+    - apply (Let (get_version_ok repository name version)).
+      apply (Let (get_versions_ok repository name versions)).
+      apply Ret.
+  Defined.
+
+  Definition get_full_package_ok (repository : LString.t) (package : FullPackage.t)
+    : Run.t (Full.get_full_package repository (FullPackage.basic package)) package.
+    apply (Let (get_versions_ok repository _ _)).
+    destruct package.
+    apply Ret.
+  Defined.
+
+  Fixpoint get_full_packages_ok (repository : LString.t) (packages : FullPackages.t)
+    : Run.t (Full.get_full_packages repository (FullPackages.basic packages)) packages.
+    destruct packages as [|package packages].
+    - apply Ret.
+    - apply (Let (get_full_package_ok repository package)).
+      apply (Let (get_full_packages_ok repository packages)).
+      apply Ret.
+  Defined.
 End Full.
