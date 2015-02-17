@@ -74,9 +74,9 @@ Module Lwt.
   Parameter delete_file : String.t -> t bool.
   Extract Constant delete_file => "Utils.delete_file".
 
-  (** Evaluate a command. *)
-  Parameter eval : String.t -> t (option (bool * String.t)).
-  Extract Constant eval => "Utils.eval".
+  (** Run a command. *)
+  Parameter system : String.t -> t (option bool).
+  Extract Constant system => "Utils.system".
 End Lwt.
 
 (** Evaluate a command using Lwt. *)
@@ -95,11 +95,7 @@ Definition eval_command (c : Command.t) : Lwt.t (Command.answer c) :=
     Lwt.write_file file_name content
   | Command.DeleteFile file_name =>
     Lwt.delete_file @@ String.of_lstring file_name
-  | Command.Eval command =>
-    Lwt.bind (Lwt.eval (String.of_lstring command)) (fun output =>
-    Lwt.ret (output |> option_map (fun output : _ * _ =>
-      let (is_success, message) := output in
-      (is_success, String.to_lstring message))))
+  | Command.System command => Lwt.system (String.of_lstring command)
   | Command.Log message =>
     let message := String.of_lstring message in
     Lwt.printl message

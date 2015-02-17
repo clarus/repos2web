@@ -91,9 +91,9 @@ Module Full.
     : C.t (option Version.t) :=
     let command := LString.s "dpkg --compare-versions " ++
       Version.id version1 ++ LString.s " ge " ++ Version.id version2 in
-    call! output := Command.Eval command in
-    ret match output with
-    | Some (is_success, _) =>
+    call! is_success := Command.System command in
+    ret match is_success with
+    | Some is_success =>
       if is_success then
         Some version1
       else
@@ -124,7 +124,7 @@ Definition main : C.t unit :=
   match packages with
   | None =>
     do_call! Command.Log @@ LString.s "The packages cannot be listed." in
-    C.Ret tt
+    ret tt
   | Some packages =>
     let! full_packages := Full.get_full_packages repository packages in
     let index := View.index full_packages in

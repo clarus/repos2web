@@ -52,3 +52,12 @@ let delete_file (file_name : string) : bool Lwt.t =
     Lwt.bind (Lwt_unix.unlink file_name) (fun _ ->
     Lwt.return true))
     (fun _ -> Lwt.return false)
+
+(** Run a command. *)
+let system (command : string) : bool option Lwt.t =
+  Lwt.catch (fun _ ->
+    Lwt.bind (Lwt_unix.system command) (fun status ->
+    Lwt.return @@ Some (match status with
+    | Lwt_unix.WEXITED 0 | Lwt_unix.WSIGNALED 0 | Lwt_unix.WSTOPPED 0 -> true
+    | Lwt_unix.WEXITED _ | Lwt_unix.WSIGNALED _ | Lwt_unix.WSTOPPED _ -> false)))
+    (fun _ -> Lwt.return None)
