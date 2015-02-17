@@ -28,6 +28,13 @@ End Run.
 Module Main.
   Import Run.
 
+  Definition list_files_error (folder : LString.t)
+    : Run.t (Main.list_files folder) None.
+    apply (Call (Command.ListFiles folder) None).
+    apply (Call (Command.Log _) tt).
+    apply Ret.
+  Defined.
+
   Definition list_files_ok (folder : LString.t) (files : list LString.t)
     : Run.t (Main.list_files folder) (Some (Main.filter_coq_files files)).
     apply (Call (Command.ListFiles folder) (Some files)).
@@ -56,13 +63,11 @@ Module Main.
     apply Ret.
   Defined.
 
-  (*Definition versions_of_package_wrong (repository : LString.t)
-    (package : LString.t)
-    : Run.t (Packages.versions_of_package repository package) None.
-    apply (Call (Command.ListFiles _) None).
-    apply (Call (Command.Log _) tt).
-    apply run_k.
-  Defined.*)
+  Definition package_of_name_error (repository : LString.t) (name : LString.t)
+    : Run.t (Main.package_of_name repository name) None.
+    apply (Bind (list_files_error _)).
+    apply Ret.
+  Defined.
 
   Definition package_of_name_ok (repository : LString.t)
     (package : Package.t)
@@ -89,11 +94,9 @@ Module Main.
     apply (packages_of_names_ok repository packages).
   Defined.
 
-  (*Definition packages_wrong (repository : LString.t) {A : Type} {k : _ -> C.t A}
-    (run_k : Run.t (k None))
-    : Run.t (Packages.packages repository _ k).
-    apply (Call (Command.ListFiles repository) None).
-    apply (Call (Command.Log _) tt).
-    apply run_k.
-  Defined.*)
+  Definition packages_error (repository : LString.t)
+    : Run.t (Main.packages repository) None.
+    apply (Bind (list_files_error repository)).
+    apply Ret.
+  Defined.
 End Main.
