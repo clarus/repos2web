@@ -37,6 +37,7 @@ Definition title (packages : FullPackages.t) : LString.t :=
   let nb_packages : N := N.of_nat @@ List.length packages in
   LString.s "          <h1>Stable <small>" ++
   LString.of_N 10 10 None nb_packages ++ LString.s " packages</small></h1>
+<p>The packages of the <a href=""https://github.com/coq/repo-stable"">stable</a> repository.</p>
 ".
 
 Definition row (package : FullPackage.t) : LString.t :=
@@ -80,7 +81,8 @@ Definition footer : LString.t :=
       </div>
     </div>
   </body>
-</html>".
+</html>
+".
 
 Definition index (packages : FullPackages.t) : LString.t :=
   header ++ title packages ++ table packages ++ footer.

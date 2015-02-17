@@ -114,10 +114,9 @@ Definition main : C.t unit :=
     do_call! Command.Log @@ LString.s "The packages cannot be listed." in
     C.Ret tt
   | Some packages =>
-    (* do_call! Command.Log @@ Packages.to_string packages in *)
     let! full_packages := Full.get_full_packages repository packages in
     let index := View.index full_packages in
-    do_call! Command.Log index in
+    do_call! Command.WriteFile (LString.s "html/index.html") index in
     ret tt
   end.
 
