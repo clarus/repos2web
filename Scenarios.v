@@ -37,7 +37,7 @@ Module Basic.
 
   Definition list_files_ok (folder : LString.t) (files : list LString.t)
     : t (Basic.list_files folder) (Some (Basic.filter_coq_files files)).
-    apply (Call (Command.ListFiles folder) (Some (LString.s "." :: LString.s ".." ::files))).
+    apply (Call (Command.ListFiles folder) (Some (LString.s "." :: LString.s ".." :: files))).
     apply Ret.
   Defined.
 
@@ -63,39 +63,39 @@ Module Basic.
     apply Ret.
   Defined.
 
-  Definition package_of_name_error (repository : LString.t) (name : LString.t)
-    : t (Basic.package_of_name repository name) None.
+  Definition get_package_of_name_error (repository : LString.t) (name : LString.t)
+    : t (Basic.get_package_of_name repository name) None.
     apply (Let (list_files_error _)).
     apply Ret.
   Defined.
 
-  Definition package_of_name_ok (repository : LString.t)
+  Definition get_package_of_name_ok (repository : LString.t)
     (package : Package.t)
-    : t (Basic.package_of_name repository (Package.name package))
+    : t (Basic.get_package_of_name repository (Package.name package))
       (Some package).
     apply (Let (list_files_versions _ package)).
     rewrite Package.of_to_folders.
     apply Ret.
   Defined.
 
-  Fixpoint packages_of_names_ok (repository : LString.t) (packages : Packages.t)
-    : t (Basic.packages_of_names repository (List.map Package.name packages))
+  Fixpoint get_packages_of_names_ok (repository : LString.t) (packages : Packages.t)
+    : t (Basic.get_packages_of_names repository (List.map Package.name packages))
       (Some packages).
     destruct packages as [|package packages].
     - apply Ret.
-    - apply (Let (package_of_name_ok repository package)).
-      apply (Let (packages_of_names_ok repository packages)).
+    - apply (Let (get_package_of_name_ok repository package)).
+      apply (Let (get_packages_of_names_ok repository packages)).
       apply Ret.
   Defined.
 
-  Definition packages_ok (repository : LString.t) (packages : Packages.t)
-    : t (Basic.packages repository) (Some packages).
+  Definition get_packages_ok (repository : LString.t) (packages : Packages.t)
+    : t (Basic.get_packages repository) (Some packages).
     apply (Let (list_files_packages repository packages)).
-    apply (packages_of_names_ok repository packages).
+    apply (get_packages_of_names_ok repository packages).
   Defined.
 
-  Definition packages_error (repository : LString.t)
-    : t (Basic.packages repository) None.
+  Definition get_packages_error (repository : LString.t)
+    : t (Basic.get_packages repository) None.
     apply (Let (list_files_error repository)).
     apply Ret.
   Defined.
@@ -135,8 +135,8 @@ Module Full.
       + apply Ret.
   Defined.
 
-  Definition get_full_package_ok (repository : LString.t) (package : FullPackage.t)
-    : t (Full.get_full_package repository (FullPackage.basic package))
+  Definition get_package_ok (repository : LString.t) (package : FullPackage.t)
+    : t (Full.get_package repository (FullPackage.basic package))
       (FullPackage.last_version_hd package).
     destruct package as [name versions last_version].
     apply (Let (get_versions_ok repository _ versions)).
@@ -144,13 +144,13 @@ Module Full.
     apply Ret.
   Defined.
 
-  Fixpoint get_full_packages_ok (repository : LString.t) (packages : FullPackages.t)
-    : t (Full.get_full_packages repository (FullPackages.basic packages))
+  Fixpoint get_packages_ok (repository : LString.t) (packages : FullPackages.t)
+    : t (Full.get_packages repository (FullPackages.basic packages))
       (FullPackages.last_version_hd packages).
     destruct packages as [|package packages].
     - apply Ret.
-    - apply (Let (get_full_package_ok repository package)).
-      apply (Let (get_full_packages_ok repository packages)).
+    - apply (Let (get_package_ok repository package)).
+      apply (Let (get_packages_ok repository packages)).
       apply Ret.
   Defined.
 End Full.
