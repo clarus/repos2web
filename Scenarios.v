@@ -37,7 +37,7 @@ Module Basic.
 
   Definition list_files_ok (folder : LString.t) (files : list LString.t)
     : t (Basic.list_files folder) (Some (Basic.filter_coq_files files)).
-    apply (Call (Command.ListFiles folder) (Some files)).
+    apply (Call (Command.ListFiles folder) (Some (LString.s "." :: LString.s ".." ::files))).
     apply Ret.
   Defined.
 
