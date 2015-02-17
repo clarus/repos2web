@@ -4,6 +4,7 @@ Require Import ListString.All.
 Require Import FunctionNinjas.All.
 Require Import Computation.
 Require Import Model.
+Require View.
 
 Import ListNotations.
 Import C.Notations.
@@ -85,6 +86,9 @@ Module Full.
       end
     end.
 
+  (*Definition max_versions (version1 version2 : Version.t) : C.t Version.t :=
+    dpkg --compare-versions #{x} lt #{y} 2>/dev/null.*)
+
   Definition get_full_package (repository : LString.t) (package : Package.t)
     : C.t FullPackage.t :=
     let (name, versions) := package in
@@ -103,14 +107,18 @@ Module Full.
 End Full.
 
 Definition main : C.t unit :=
-  let! packages := Basic.packages (LString.s "repo-stable/packages") in
+  let repository := LString.s "repo-stable/packages" in
+  let! packages := Basic.packages repository in
   match packages with
   | None =>
     do_call! Command.Log @@ LString.s "The packages cannot be listed." in
     C.Ret tt
   | Some packages =>
-    do_call! Command.Log @@ Packages.to_string packages in
-    C.Ret tt
+    (* do_call! Command.Log @@ Packages.to_string packages in *)
+    let! full_packages := Full.get_full_packages repository packages in
+    let index := View.index full_packages in
+    do_call! Command.Log index in
+    ret tt
   end.
 
 Require Import Extraction.
