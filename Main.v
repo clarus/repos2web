@@ -86,8 +86,20 @@ Module Full.
       end
     end.
 
-  (*Definition max_versions (version1 version2 : Version.t) : C.t Version.t :=
-    dpkg --compare-versions #{x} lt #{y} 2>/dev/null.*)
+  (** Use Debian `dpkg` to compare version numbers. *)
+  Definition max_versions (version1 version2 : Version.t)
+    : C.t (option Version.t) :=
+    let command := LString.s "dpkg --compare-versions " ++
+      Version.id version1 ++ LString.s " ge " ++ Version.id version2 in
+    call! output := Command.Eval command in
+    ret match output with
+    | Some (is_success, _) =>
+      if is_success then
+        Some version1
+      else
+        Some version2
+    | None => None
+    end.
 
   Definition get_full_package (repository : LString.t) (package : Package.t)
     : C.t FullPackage.t :=
