@@ -27,7 +27,7 @@ Module Package.
     versions package |> List.map (fun version =>
       name package ++ ["."] ++ version).
 
-  Lemma of_to_folders (package : Package.t)
+  Lemma of_to_folders (package : t)
     : of_folders (name package) (to_folders package) = package.
   Admitted.
 End Package.
@@ -41,3 +41,19 @@ Module Packages.
   Definition to_folders (packages : t) : list LString.t :=
     List.map Package.name packages.
 End Packages.
+
+Module Version.
+  Record t := New {
+    id : LString.t;
+    description : LString.t }.
+End Version.
+
+Module FullPackage.
+  Record t := New {
+    name : LString.t;
+    versions : list Version.t}.
+End FullPackage.
+
+Module FullPackages.
+  Definition t := list FullPackage.t.
+End FullPackages.
