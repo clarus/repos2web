@@ -20,8 +20,8 @@ Module Run.
   | Call : forall {A : Type} (command : Command.t) (answer : Command.answer command)
     {handler : Command.answer command -> C.t A} {x : A}, t (handler answer) x ->
     t (C.Call command handler) x
-  | Bind : forall {A B : Type} {c_x : C.t B} {x : B} {c_f : B -> C.t A} {y : A},
-    t c_x x -> t (c_f x) y -> t (C.Bind c_x c_f) y
+  | Let : forall {A B : Type} {c_x : C.t B} {x : B} {c_f : B -> C.t A} {y : A},
+    t c_x x -> t (c_f x) y -> t (C.Let c_x c_f) y
   | Intro : forall {A : Type} (B : Type) {c : C.t A} {x : A}, (B -> t c x) -> t c x.
 End Run.
 
@@ -65,7 +65,7 @@ Module Main.
 
   Definition package_of_name_error (repository : LString.t) (name : LString.t)
     : Run.t (Main.package_of_name repository name) None.
-    apply (Bind (list_files_error _)).
+    apply (Let (list_files_error _)).
     apply Ret.
   Defined.
 
@@ -73,7 +73,7 @@ Module Main.
     (package : Package.t)
     : Run.t (Main.package_of_name repository (Package.name package))
       (Some package).
-    apply (Bind (list_files_versions _ package)).
+    apply (Let (list_files_versions _ package)).
     rewrite Package.of_to_folders.
     apply Ret.
   Defined.
@@ -83,20 +83,20 @@ Module Main.
       (Some packages).
     destruct packages as [|package packages].
     - apply Ret.
-    - apply (Bind (package_of_name_ok repository package)).
-      apply (Bind (packages_of_names_ok repository packages)).
+    - apply (Let (package_of_name_ok repository package)).
+      apply (Let (packages_of_names_ok repository packages)).
       apply Ret.
   Defined.
 
   Definition packages_ok (repository : LString.t) (packages : Packages.t)
     : Run.t (Main.packages repository) (Some packages).
-    apply (Bind (list_files_packages repository packages)).
+    apply (Let (list_files_packages repository packages)).
     apply (packages_of_names_ok repository packages).
   Defined.
 
   Definition packages_error (repository : LString.t)
     : Run.t (Main.packages repository) None.
-    apply (Bind (list_files_error repository)).
+    apply (Let (list_files_error repository)).
     apply Ret.
   Defined.
 End Main.

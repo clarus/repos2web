@@ -106,5 +106,5 @@ Fixpoint eval {A : Type} (x : C.t A) : Lwt.t A :=
   | C.Call command handler =>
     Lwt.bind (eval_command command) (fun answer =>
     eval @@ handler answer)
-  | C.Bind _ x f => Lwt.bind (eval x) (fun x => eval (f x))
+  | C.Let _ x f => Lwt.bind (eval x) (fun x => eval (f x))
   end.
