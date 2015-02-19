@@ -1,8 +1,9 @@
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
-Require Import ListString.All.
 Require Import FunctionNinjas.All.
-Require Import Computation.
+Require Import IoEffects.All.
+Require Import IoEffectsUnix.All.
+Require Import ListString.All.
 Require Import Model.
 Require View.
 
@@ -10,9 +11,9 @@ Import ListNotations.
 Import C.Notations.
 Local Open Scope char.
 
-Definition log (message : LString.t) : C.t unit :=
-  do_call! Command.Print (message ++ [LString.Char.n]) in
-  ret tt.
+Definition log (message : LString.t) : C.t Unix.effects unit :=
+  call Unix.effects (Unix.Print (message ++ [LString.Char.n])) (fun _ =>
+  ret tt).
 
 (** Get basic informations about the packages. *)
 Module Basic.
@@ -24,17 +25,18 @@ Module Basic.
       end).
 
   (** List the files which are starting with `coq` in a folder. *)
-  Definition list_files (folder : LString.t) : C.t (option (list LString.t)) :=
-    call! names := Command.ListFiles folder in
+  Definition list_files (folder : LString.t)
+    : C.t Unix.effects (option (list LString.t)) :=
+    call Unix.effects (Unix.ListFiles folder) (fun names =>
     match names with
     | None =>
       do! log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
       ret None
     | Some names => ret @@ Some (filter_coq_files names)
-    end.
+    end).
 
   Definition get_package_of_name (repository : LString.t) (name : LString.t)
-    : C.t (option Package.t) :=
+    : C.t Unix.effects (option Package.t) :=
     let package_folder := repository ++ ["/"] ++ name in
     let! folders := list_files package_folder in
     match folders with
@@ -43,7 +45,7 @@ Module Basic.
     end.
 
   Fixpoint get_packages_of_names (repository : LString.t)
-    (names : list LString.t) : C.t (option Packages.t) :=
+    (names : list LString.t) : C.t Unix.effects (option Packages.t) :=
     match names with
     | [] => ret (Some [])
     | name :: names =>
@@ -55,7 +57,7 @@ Module Basic.
       end
     end.
 
-  Definition get_packages (repository : LString.t) : C.t (option Packages.t) :=
+  Definition get_packages (repository : LString.t) : C.t Unix.effects (option Packages.t) :=
     let! names := list_files repository in
     match names with
     | None => ret None
@@ -66,19 +68,19 @@ End Basic.
 (** Get the full description of the packages. *)
 Module Full.
   Definition get_version (repository name version : LString.t)
-    : C.t (option Version.t) :=
+    : C.t Unix.effects (option Version.t) :=
     let descr_path := repository ++ ["/"] ++ name ++ ["/"] ++ name ++ ["."] ++
       version ++ LString.s "/descr" in
-    call! content := Command.ReadFile descr_path in
+    call Unix.effects (Unix.ReadFile descr_path) (fun content =>
     match content with
     | None =>
       do! log (descr_path ++ LString.s " not found.") in
       ret None
     | Some content => ret @@ Some (Version.New version content)
-    end.
+    end).
 
   Fixpoint get_versions (repository name : LString.t) (versions : list LString.t)
-    : C.t (list Version.t) :=
+    : C.t Unix.effects (list Version.t) :=
     match versions with
     | [] => ret []
     | version :: versions =>
@@ -92,10 +94,10 @@ Module Full.
 
   (** Use Debian `dpkg` to compare version numbers. *)
   Definition max_version (version1 version2 : Version.t)
-    : C.t (option Version.t) :=
+    : C.t Unix.effects (option Version.t) :=
     let command := LString.s "dpkg --compare-versions " ++
       Version.id version1 ++ LString.s " ge " ++ Version.id version2 in
-    call! is_success := Command.System command in
+    call Unix.effects (Unix.System command) (fun is_success =>
     match is_success with
     | Some is_success =>
       ret (if is_success then
@@ -105,9 +107,9 @@ Module Full.
     | None =>
       do! log @@ LString.s "Cannot call the dpkg command." in
       ret None
-    end.
+    end).
 
-  Fixpoint last_version (versions : list Version.t) : C.t (option Version.t) :=
+  Fixpoint last_version (versions : list Version.t) : C.t Unix.effects (option Version.t) :=
     match versions with
     | [] => ret None
     | version :: versions =>
@@ -119,14 +121,14 @@ Module Full.
     end.
 
   Definition get_package (repository : LString.t) (package : Package.t)
-    : C.t FullPackage.t :=
+    : C.t Unix.effects FullPackage.t :=
     let (name, versions) := package in
     let! versions := get_versions repository name versions in
     let! last_version := last_version versions in
     ret @@ FullPackage.New name versions last_version.
 
   Fixpoint get_packages (repository : LString.t) (packages : Packages.t)
-    : C.t FullPackages.t :=
+    : C.t Unix.effects FullPackages.t :=
     match packages with
     | [] => ret []
     | package :: packages =>
@@ -136,7 +138,7 @@ Module Full.
     end.
 End Full.
 
-Definition main : C.t unit :=
+Definition main : C.t Unix.effects unit :=
   let repository := LString.s "repo-stable/packages" in
   let! packages := Basic.get_packages repository in
   match packages with
@@ -144,8 +146,8 @@ Definition main : C.t unit :=
   | Some packages =>
     let! full_packages := Full.get_packages repository packages in
     let index := View.index full_packages in
-    do_call! Command.WriteFile (LString.s "html/index.html") index in
-    ret tt
+    call Unix.effects (Unix.WriteFile (LString.s "html/index.html") index) (fun _ =>
+    ret tt)
   end.
 
 Require Import Extraction.

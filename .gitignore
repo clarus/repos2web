@@ -1,4 +1,5 @@
 Makefile
+Makefile.bak
 extraction/_build
 extraction/repo2web.ml
 extraction/repo2web.mli

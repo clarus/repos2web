@@ -2,42 +2,37 @@
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
+Require Import IoEffects.All.
+Require Import IoEffectsUnix.All.
 Require Import ListString.All.
-Require Import Computation.
 Require Import Main.
 Require Import Model.
 
 Import ListNotations.
 Import C.Notations.
+Import Run.
 Local Open Scope char.
 
-(** A run is an execution of the program with explicit answers for the
-    system calls. We define a run by induction on a computation. *)
-Inductive t : forall {A : Type}, C.t A -> A -> Type :=
-| Ret : forall {A : Type} (x : A), t (C.Ret x) x
-| Call : forall {A : Type} (command : Command.t) (answer : Command.answer command)
-  {handler : Command.answer command -> C.t A} {x : A}, t (handler answer) x ->
-  t (C.Call command handler) x
-| Let : forall {A B : Type} {c_x : C.t B} {x : B} {c_f : B -> C.t A} {y : A},
-  t c_x x -> t (c_f x) y -> t (C.Let c_x c_f) y
-| Intro : forall {A : Type} (B : Type) {c : C.t A} {x : A}, (B -> t c x) -> t c x.
+(** We force the implicit type `E` of effects. *)
+Definition Call {A : Type} :=
+  Call (E := Unix.effects) (A := A).
 
 Definition log_ok (message : LString.t) : t (log message) tt.
-  apply (Call (Command.Print _) true).
+  apply (Call (Unix.Print _) true).
   apply Ret.
 Defined.
 
 Module Basic.
   Definition list_files_error (folder : LString.t)
     : t (Basic.list_files folder) None.
-    apply (Call (Command.ListFiles folder) None).
+    apply (Call (Unix.ListFiles folder) None).
     apply (Let (log_ok _)).
     apply Ret.
   Defined.
 
   Definition list_files_ok (folder : LString.t) (files : list LString.t)
     : t (Basic.list_files folder) (Some (Basic.filter_coq_files files)).
-    apply (Call (Command.ListFiles folder) (Some (LString.s "." :: LString.s ".." :: files))).
+    apply (Call (Unix.ListFiles folder) (Some (LString.s "." :: LString.s ".." :: files))).
     apply Ret.
   Defined.
 
@@ -47,7 +42,7 @@ Module Basic.
 
   Definition list_files_versions (folder : LString.t) (package : Package.t)
     : t (Basic.list_files folder) (Some (Package.to_folders package)).
-    apply (Call (Command.ListFiles folder) (Some (Package.to_folders package))).
+    apply (Call (Unix.ListFiles folder) (Some (Package.to_folders package))).
     rewrite filter_coq_files_of_version_folders.
     apply Ret.
   Defined.
@@ -58,7 +53,7 @@ Module Basic.
 
   Definition list_files_packages (folder : LString.t) (packages : Packages.t)
     : t (Basic.list_files folder) (Some (Packages.to_folders packages)).
-    apply (Call (Command.ListFiles folder) (Some (Packages.to_folders packages))).
+    apply (Call (Unix.ListFiles folder) (Some (Packages.to_folders packages))).
     rewrite filter_coq_files_of_package_folders.
     apply Ret.
   Defined.
@@ -104,7 +99,7 @@ End Basic.
 Module Full.
   Definition get_version_ok (repository name : LString.t) (version : Version.t)
     : t (Full.get_version repository name (Version.id version)) (Some version).
-    apply (Call (Command.ReadFile _) (Some (Version.description version))).
+    apply (Call (Unix.ReadFile _) (Some (Version.description version))).
     destruct version.
     apply Ret.
   Defined.
@@ -121,7 +116,7 @@ Module Full.
 
   Definition max_version_ge (version1 version2 : Version.t)
     : t (Full.max_version version1 version2) (Some version1).
-    apply (Call (Command.System _) (Some true)).
+    apply (Call (Unix.System _) (Some true)).
     apply Ret.
   Defined.
 
