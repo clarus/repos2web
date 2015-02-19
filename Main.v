@@ -148,9 +148,13 @@ Definition main : C unit :=
   | None => log @@ LString.s "The packages cannot be listed."
   | Some packages =>
     let! full_packages := Full.get_packages repository packages in
-    let index := View.index full_packages in
-    call Unix.effects (Unix.WriteFile (LString.s "html/index.html") index) (fun _ =>
-    ret tt)
+    let index_content := View.index full_packages in
+    let index_name := LString.s "html/index.html" in
+    call Unix.effects (Unix.WriteFile index_name index_content) (fun is_success =>
+    if is_success then
+      log (index_name ++ LString.s " generated.")
+    else
+      log (LString.s "Cannot generate " ++ index_name ++ LString.s "."))
   end.
 
 Require Import Extraction.
