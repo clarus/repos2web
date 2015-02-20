@@ -14,10 +14,6 @@ Local Open Scope char.
 (** Notation for computations with Unix effects. *)
 Definition C := C.t Unix.effects.
 
-Definition log (message : LString.t) : C unit :=
-  call Unix.effects (Unix.Print (message ++ [LString.Char.n])) (fun _ =>
-  ret tt).
-
 (** Get basic informations about the packages. *)
 Module Basic.
   Definition filter_coq_files (files : list LString.t) : list LString.t :=
@@ -28,20 +24,20 @@ Module Basic.
       end).
 
   (** List the files which are starting with `coq` in a folder. *)
-  Definition list_files (folder : LString.t)
+  Definition list_coq_files (folder : LString.t)
     : C (option (list LString.t)) :=
-    call Unix.effects (Unix.ListFiles folder) (fun names =>
+    let! names := Unix.list_files folder in
     match names with
     | None =>
       do! log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
       ret None
     | Some names => ret @@ Some (filter_coq_files names)
-    end).
+    end.
 
   Definition get_package_of_name (repository : LString.t) (name : LString.t)
     : C (option Package.t) :=
     let package_folder := repository ++ ["/"] ++ name in
-    let! folders := list_files package_folder in
+    let! folders := list_coq_files package_folder in
     match folders with
     | None => ret None
     | Some folders => ret @@ Some (Package.of_folders name folders)
@@ -61,7 +57,7 @@ Module Basic.
     end.
 
   Definition get_packages (repository : LString.t) : C (option Packages.t) :=
-    let! names := list_files repository in
+    let! names := list_coq_files repository in
     match names with
     | None => ret None
     | Some names => get_packages_of_names repository names
@@ -74,13 +70,13 @@ Module Full.
     : C (option Version.t) :=
     let descr_path := repository ++ ["/"] ++ name ++ ["/"] ++ name ++ ["."] ++
       version ++ LString.s "/descr" in
-    call Unix.effects (Unix.ReadFile descr_path) (fun content =>
+    let! content := Unix.read_file descr_path in
     match content with
     | None =>
       do! log (descr_path ++ LString.s " not found.") in
       ret None
     | Some content => ret @@ Some (Version.New version content)
-    end).
+    end.
 
   Fixpoint get_versions (repository name : LString.t) (versions : list LString.t)
     : C (list Version.t) :=
@@ -100,7 +96,7 @@ Module Full.
     : C (option Version.t) :=
     let command := LString.s "dpkg --compare-versions " ++
       Version.id version1 ++ LString.s " ge " ++ Version.id version2 in
-    call Unix.effects (Unix.System command) (fun is_success =>
+    let! is_success := Unix.system command in
     match is_success with
     | Some is_success =>
       ret (if is_success then
@@ -110,7 +106,7 @@ Module Full.
     | None =>
       do! log @@ LString.s "Cannot call the dpkg command." in
       ret None
-    end).
+    end.
 
   Fixpoint last_version (versions : list Version.t) : C (option Version.t) :=
     match versions with
@@ -150,11 +146,11 @@ Definition main : C unit :=
     let! full_packages := Full.get_packages repository packages in
     let index_content := View.index full_packages in
     let index_name := LString.s "html/index.html" in
-    call Unix.effects (Unix.WriteFile index_name index_content) (fun is_success =>
+    let! is_success := Unix.write_file index_name index_content in
     if is_success then
       log (index_name ++ LString.s " generated.")
     else
-      log (LString.s "Cannot generate " ++ index_name ++ LString.s "."))
+      log (LString.s "Cannot generate " ++ index_name ++ LString.s ".")
   end.
 
 Require Import Extraction.
