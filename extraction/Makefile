@@ -1,5 +1,5 @@
 build:
-	ocamlbuild repo2web.native -use-ocamlfind -package io-effects-unix,lwt,lwt.unix
+	ocamlbuild repos2web.native -use-ocamlfind -package io-effects-unix,lwt,lwt.unix
 
 clean:
 	ocamlbuild -clean

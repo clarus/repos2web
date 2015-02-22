@@ -95,7 +95,8 @@ Module Full.
   Definition max_version (version1 version2 : Version.t)
     : C (option Version.t) :=
     let command := LString.s "dpkg --compare-versions " ++
-      Version.id version1 ++ LString.s " ge " ++ Version.id version2 in
+      Version.id version1 ++ LString.s " ge " ++ Version.id version2 ++
+      LString.s " 2>/dev/null" in
     let! is_success := Unix.system command in
     match is_success with
     | Some is_success =>
@@ -155,5 +156,5 @@ Definition main : C unit :=
 
 Require Import Extraction.
 
-Definition repo2web : unit := Extraction.Lwt.run @@ Extraction.eval main.
-Extraction "extraction/repo2web" repo2web.
+Definition repos2web : unit := Extraction.Lwt.run @@ Extraction.eval main.
+Extraction "extraction/repos2web" repos2web.

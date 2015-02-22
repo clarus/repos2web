@@ -1,12 +1,5 @@
 Makefile
 Makefile.bak
-extraction/_build
-extraction/repo2web.ml
-extraction/repo2web.mli
-extraction/repo2web.native
-extraction/html/
-extraction/repo-stable
-extraction/repo-unstable
 *.glob
 *.v.d
 *.vo
