@@ -5,6 +5,7 @@ extraction/repo2web.mli
 extraction/repo2web.native
 extraction/html/
 extraction/repo-stable
+extraction/repo-unstable
 *.glob
 *.v.d
 *.vo
