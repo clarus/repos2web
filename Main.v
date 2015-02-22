@@ -94,7 +94,8 @@ Module Full.
   Definition max_version (version1 version2 : Version.t)
     : C.t (option Version.t) :=
     let command := LString.s "dpkg --compare-versions " ++
-      Version.id version1 ++ LString.s " ge " ++ Version.id version2 in
+      Version.id version1 ++ LString.s " ge " ++ Version.id version2 ++
+      LString.s " 2>/dev/null" in
     call! is_success := Command.System command in
     match is_success with
     | Some is_success =>
