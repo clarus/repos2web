@@ -3,6 +3,7 @@ Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
 Require Import IoEffects.All.
 Require Import IoEffectsUnix.All.
+Require Import ListPlus.All.
 Require Import ListString.All.
 Require Import Model.
 Require View.
@@ -16,35 +17,29 @@ Definition C := C.t Unix.effects.
 
 (** Get basic informations about the packages. *)
 Module Basic.
-  Definition filter_coq_files (files : list LString.t) : list LString.t :=
-    files |> List.filter (fun name =>
-      match name with
-      | "c" :: "o" :: "q" :: _ => true
-      | _ => false
-      end).
-
   (** List the files which are starting with `coq` in a folder. *)
-  Definition list_coq_files (folder : LString.t)
-    : C (option (list LString.t)) :=
-    let! names := Unix.list_files folder in
-    match names with
+  Definition list_coq_files (folder : LString.t) : C (option (list Name.t)) :=
+    let! folders := Unix.list_files folder in
+    match folders with
     | None =>
       do! log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
       ret None
-    | Some names => ret @@ Some (filter_coq_files names)
+    | Some folders => ret @@ Some (Name.of_strings folders)
     end.
 
-  Definition get_package_of_name (repository : LString.t) (name : LString.t)
+  (** Get the versions of a package's name to form a package. *)
+  Definition get_package_of_name (repository : LString.t) (name : Name.t)
     : C (option Package.t) :=
-    let package_folder := repository ++ ["/"] ++ name in
+    let package_folder := repository ++ ["/"] ++ Name.to_string name in
     let! folders := list_coq_files package_folder in
     match folders with
     | None => ret None
     | Some folders => ret @@ Some (Package.of_folders name folders)
     end.
 
+  (** Get a list of packages from a list of names. *)
   Fixpoint get_packages_of_names (repository : LString.t)
-    (names : list LString.t) : C (option Packages.t) :=
+    (names : list Name.t) : C (option Packages.t) :=
     match names with
     | [] => ret (Some [])
     | name :: names =>
@@ -56,6 +51,7 @@ Module Basic.
       end
     end.
 
+  (** Get the list of packages of a repository. *)
   Definition get_packages (repository : LString.t) : C (option Packages.t) :=
     let! names := list_coq_files repository in
     match names with
@@ -66,10 +62,11 @@ End Basic.
 
 (** Get the full description of the packages. *)
 Module Full.
-  Definition get_version (repository name version : LString.t)
-    : C (option Version.t) :=
-    let descr_path := repository ++ ["/"] ++ name ++ ["/"] ++ name ++ ["."] ++
-      version ++ LString.s "/descr" in
+  Definition get_version (repository : LString.t) (name : Name.t)
+    (version : LString.t) : C (option Version.t) :=
+    let descr_path :=
+      repository ++ ["/"] ++ Name.to_string name ++ ["/"] ++
+      Name.to_string name ++ ["."] ++ version ++ LString.s "/descr" in
     let! content := Unix.read_file descr_path in
     match content with
     | None =>
@@ -78,8 +75,8 @@ Module Full.
     | Some content => ret @@ Some (Version.New version content)
     end.
 
-  Fixpoint get_versions (repository name : LString.t) (versions : list LString.t)
-    : C (list Version.t) :=
+  Fixpoint get_versions (repository : LString.t) (name : Name.t)
+    (versions : list LString.t) : C (list Version.t) :=
     match versions with
     | [] => ret []
     | version :: versions =>

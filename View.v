@@ -47,7 +47,7 @@ Definition row (package : FullPackage.t) : LString.t :=
   | None => LString.s ""
   | Some version => LString.s
 "              <tr>
-                <td>" ++ name ++ LString.s "</td>
+                <td>" ++ Name.name name ++ LString.s "</td>
                 <td>" ++ Version.id version ++ LString.s "</td>
                 <td>" ++ LString.trim (Version.description version) ++ LString.s "</td>
               </tr>
@@ -56,7 +56,9 @@ Definition row (package : FullPackage.t) : LString.t :=
 
 Definition table (packages : FullPackages.t) : LString.t :=
   let packages := packages |> Sort.sort (fun a b =>
-    match LString.compare (FullPackage.name a) (FullPackage.name b) with
+    let a := Name.name @@ FullPackage.name a in
+    let b := Name.name @@ FullPackage.name b in
+    match LString.compare a b with
     | Lt | Eq => true
     | Gt => false
     end) in

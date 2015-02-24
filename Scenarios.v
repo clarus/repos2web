@@ -21,35 +21,15 @@ Module Basic.
     apply Ret.
   Defined.
 
-  Definition list_coq_files_ok (folder : LString.t) (files : list LString.t)
-    : Run.t (Basic.list_coq_files folder) (Some (Basic.filter_coq_files files)).
-    apply (Let (Unix.Run.list_files_ok _ (LString.s "." :: LString.s ".." :: files))).
+  Definition list_coq_files_ok (folder : LString.t) (files : list Name.t)
+    : Run.t (Basic.list_coq_files folder) (Some files).
+    apply (Let (Unix.Run.list_files_ok _ (LString.s "." :: LString.s ".." :: Name.to_strings files))).
+    unfold Name.of_strings; simpl.
+    rewrite Name.of_to_strings.
     apply Ret.
   Defined.
 
-  Lemma filter_coq_files_of_version_folders (package : Package.t)
-    : Basic.filter_coq_files (Package.to_folders package) = Package.to_folders package.
-  Admitted.
-
-  Definition list_files_versions (folder : LString.t) (package : Package.t)
-    : Run.t (Basic.list_coq_files folder) (Some (Package.to_folders package)).
-    apply (Let (Unix.Run.list_files_ok folder (Package.to_folders package))).
-    rewrite filter_coq_files_of_version_folders.
-    apply Ret.
-  Defined.
-
-  Lemma filter_coq_files_of_package_folders (packages : Packages.t)
-    : Basic.filter_coq_files (Packages.to_folders packages) = Packages.to_folders packages.
-  Admitted.
-
-  Definition list_files_packages (folder : LString.t) (packages : Packages.t)
-    : Run.t (Basic.list_coq_files folder) (Some (Packages.to_folders packages)).
-    apply (Let (Unix.Run.list_files_ok folder (Packages.to_folders packages))).
-    rewrite filter_coq_files_of_package_folders.
-    apply Ret.
-  Defined.
-
-  Definition get_package_of_name_error (repository : LString.t) (name : LString.t)
+  Definition get_package_of_name_error (repository : LString.t) (name : Name.t)
     : Run.t (Basic.get_package_of_name repository name) None.
     apply (Let (list_coq_files_error _)).
     apply Ret.
@@ -59,7 +39,7 @@ Module Basic.
     (package : Package.t)
     : Run.t (Basic.get_package_of_name repository (Package.name package))
       (Some package).
-    apply (Let (list_files_versions _ package)).
+    apply (Let (list_coq_files_ok _ (Package.to_folders package))).
     rewrite Package.of_to_folders.
     apply Ret.
   Defined.
@@ -76,7 +56,7 @@ Module Basic.
 
   Definition get_packages_ok (repository : LString.t) (packages : Packages.t)
     : Run.t (Basic.get_packages repository) (Some packages).
-    apply (Let (list_files_packages repository packages)).
+    apply (Let (list_coq_files_ok _ (Packages.to_folders packages))).
     apply (get_packages_of_names_ok repository packages).
   Defined.
 
