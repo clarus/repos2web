@@ -68,14 +68,16 @@ Module Basic.
 End Basic.
 
 Module Full.
-  Definition get_version_ok (repository name : LString.t) (version : Version.t)
+  Definition get_version_ok (repository : LString.t) (name : Name.t)
+    (version : Version.t)
     : Run.t (Full.get_version repository name (Version.id version)) (Some version).
     apply (Let (Unix.Run.read_file_ok _ (Version.description version))).
     destruct version.
     apply Ret.
   Defined.
 
-  Fixpoint get_versions_ok (repository name : LString.t) (versions : list Version.t)
+  Fixpoint get_versions_ok (repository : LString.t) (name : Name.t)
+    (versions : list Version.t)
     : Run.t (Full.get_versions repository name (List.map Version.id versions))
       versions.
     destruct versions as [|version versions].
