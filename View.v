@@ -39,9 +39,8 @@ Definition header : LString.t :=
 (** The title with the number of packages. *)
 Definition title (packages : FullPackages.t) : LString.t :=
   let nb_packages : N := N.of_nat @@ List.length packages in
-  LString.s "          <h1>Stable <small>" ++
-  LString.of_N 10 10 None nb_packages ++ LString.s " packages</small></h1>
-<p>The packages of the <a href=""https://github.com/coq/repo-stable"">stable</a> repository.</p>
+  LString.s "          <h1>" ++ LString.of_N 10 10 None nb_packages ++
+  LString.s " packages</h1>
 ".
 
 (** A row in the table of packages. *)
