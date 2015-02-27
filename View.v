@@ -2,10 +2,10 @@
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.Ascii.
+Require Import ListPlus.All.
 Require Import ListString.All.
 Require Import FunctionNinjas.All.
 Require Import Model.
-Require Sort.
 
 Import ListNotations.
 
