@@ -1,3 +1,4 @@
+(** The interactive program. *)
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
@@ -17,7 +18,7 @@ Definition C := C.t Unix.effects.
 
 (** Get basic informations about the packages. *)
 Module Basic.
-  (** List the files which are starting with `coq` in a folder. *)
+  (** List the files which are starting with `coq:` in a folder. *)
   Definition list_coq_files (folder : LString.t) : C (option (list Name.t)) :=
     let! folders := Unix.list_files folder in
     match folders with
@@ -62,6 +63,7 @@ End Basic.
 
 (** Get the full description of the packages. *)
 Module Full.
+  (** Get the description of a version of a package. *)
   Definition get_version (repository : LString.t) (name : Name.t)
     (version : LString.t) : C (option Version.t) :=
     let descr_path :=
@@ -75,6 +77,7 @@ Module Full.
     | Some content => ret @@ Some (Version.New version content)
     end.
 
+  (** Get the list of full versions of packages. *)
   Fixpoint get_versions (repository : LString.t) (name : Name.t)
     (versions : list LString.t) : C (list Version.t) :=
     match versions with
@@ -88,7 +91,7 @@ Module Full.
       end
     end.
 
-  (** Use Debian `dpkg` to compare version numbers. *)
+  (** Return the latest version, using Debian `dpkg` for comparison. *)
   Definition max_version (version1 version2 : Version.t)
     : C (option Version.t) :=
     let command := LString.s "dpkg --compare-versions " ++
@@ -106,6 +109,7 @@ Module Full.
       ret None
     end.
 
+  (** The latest version of a list of versions. *)
   Fixpoint last_version (versions : list Version.t) : C (option Version.t) :=
     match versions with
     | [] => ret None
@@ -117,6 +121,7 @@ Module Full.
       end
     end.
 
+  (** Get the full package of a package. *)
   Definition get_package (repository : LString.t) (package : Package.t)
     : C FullPackage.t :=
     let (name, versions) := package in
@@ -124,6 +129,7 @@ Module Full.
     let! last_version := last_version versions in
     ret @@ FullPackage.New name versions last_version.
 
+  (** Get the list of full package of a list of packages. *)
   Fixpoint get_packages (repository : LString.t) (packages : Packages.t)
     : C FullPackages.t :=
     match packages with
@@ -135,6 +141,7 @@ Module Full.
     end.
 End Full.
 
+(** The main function. *)
 Definition main : C unit :=
   let repository := LString.s "repo-stable/packages" in
   let! packages := Basic.get_packages repository in
@@ -153,5 +160,6 @@ Definition main : C unit :=
 
 Require Import Extraction.
 
+(** The extracted program. *)
 Definition repos2web : unit := Extraction.Lwt.run @@ Extraction.eval main.
 Extraction "extraction/repos2web" repos2web.

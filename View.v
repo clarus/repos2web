@@ -1,3 +1,4 @@
+(** Render a model to HTML. *)
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.Ascii.
@@ -8,6 +9,7 @@ Require Sort.
 
 Import ListNotations.
 
+(** The header of the HTML page. *)
 Definition header : LString.t :=
   LString.s "<!DOCTYPE html>
 <html lang=""en"">
@@ -34,6 +36,7 @@ Definition header : LString.t :=
         <div class=""col-md-12"">
 ".
 
+(** The title with the number of packages. *)
 Definition title (packages : FullPackages.t) : LString.t :=
   let nb_packages : N := N.of_nat @@ List.length packages in
   LString.s "          <h1>Stable <small>" ++
@@ -41,6 +44,7 @@ Definition title (packages : FullPackages.t) : LString.t :=
 <p>The packages of the <a href=""https://github.com/coq/repo-stable"">stable</a> repository.</p>
 ".
 
+(** A row in the table of packages. *)
 Definition row (package : FullPackage.t) : LString.t :=
   let (name, _, last_version) := package in
   match last_version with
@@ -54,6 +58,7 @@ Definition row (package : FullPackage.t) : LString.t :=
 "
   end.
 
+(** The table of packages. *)
 Definition table (packages : FullPackages.t) : LString.t :=
   let packages := packages |> Sort.sort (fun a b =>
     let a := Name.name @@ FullPackage.name a in
@@ -77,6 +82,7 @@ Definition table (packages : FullPackages.t) : LString.t :=
           </table>
 ".
 
+(** The footer of the page. *)
 Definition footer : LString.t :=
   LString.s
 "        </div>
@@ -92,5 +98,6 @@ Definition footer : LString.t :=
 </html>
 ".
 
+(** The index page. *)
 Definition index (packages : FullPackages.t) : LString.t :=
   header ++ title packages ++ table packages ++ footer.

@@ -1,3 +1,4 @@
+(** Data models. *)
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import ListString.All.
