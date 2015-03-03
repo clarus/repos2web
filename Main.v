@@ -2,8 +2,8 @@
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
-Require Import IoEffects.All.
-Require Import IoEffectsUnix.All.
+Require Import Io.All.
+Require Import Io.System.All.
 Require Import ListPlus.All.
 Require Import ListString.All.
 Require Import Model.
@@ -13,14 +13,14 @@ Import ListNotations.
 Import C.Notations.
 Local Open Scope char.
 
-(** Notation for computations with Unix effects. *)
-Definition C := C.t Unix.effects.
+(** Notation for computations with System effects. *)
+Definition C := C.t System.effects.
 
 (** Get basic informations about the packages. *)
 Module Basic.
   (** List the files which are starting with `coq:` in a folder. *)
   Definition list_coq_files (folder : LString.t) : C (option (list Name.t)) :=
-    let! folders := Unix.list_files folder in
+    let! folders := System.list_files folder in
     match folders with
     | None =>
       do! log (LString.s "The folder " ++ folder ++ LString.s " cannot be listed.") in
@@ -69,7 +69,7 @@ Module Full.
     let descr_path :=
       repository ++ ["/"] ++ Name.to_string name ++ ["/"] ++
       Name.to_string name ++ ["."] ++ version ++ LString.s "/descr" in
-    let! content := Unix.read_file descr_path in
+    let! content := System.read_file descr_path in
     match content with
     | None =>
       do! log (descr_path ++ LString.s " not found.") in
@@ -97,7 +97,7 @@ Module Full.
     let command := LString.s "dpkg --compare-versions " ++
       Version.id version1 ++ LString.s " ge " ++ Version.id version2 ++
       LString.s " 2>/dev/null" in
-    let! is_success := Unix.system command in
+    let! is_success := System.system command in
     match is_success with
     | Some is_success =>
       ret (if is_success then
@@ -151,7 +151,7 @@ Definition main : C unit :=
     let! full_packages := Full.get_packages repository packages in
     let index_content := View.index full_packages in
     let index_name := LString.s "html/index.html" in
-    let! is_success := Unix.write_file index_name index_content in
+    let! is_success := System.write_file index_name index_content in
     if is_success then
       log (index_name ++ LString.s " generated.")
     else

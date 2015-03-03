@@ -2,15 +2,15 @@
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.Ascii.
 Require Import FunctionNinjas.All.
-Require Import IoEffects.All.
-Require Import IoEffectsUnix.All.
+Require Import Io.All.
+Require Import Io.System.All.
 Require Import ListString.All.
 Require Import Main.
 Require Import Model.
 
 Import ListNotations.
 Import C.Notations.
-Import IoEffects.Run.
+Import Io.Run.
 Local Open Scope char.
 
 (** Scenarios for functions on the basic packages. *)
@@ -18,7 +18,7 @@ Module Basic.
   (** List the package names in a folder. *)
   Definition list_coq_files_ok (folder : LString.t) (files : list Name.t)
     : Run.t (Basic.list_coq_files folder) (Some files).
-    apply (Let (Unix.Run.list_files_ok _ (LString.s "." :: LString.s ".." :: Name.to_strings files))).
+    apply (Let (System.Run.list_files_ok _ (LString.s "." :: LString.s ".." :: Name.to_strings files))).
     unfold Name.of_strings; simpl.
     rewrite Name.of_to_strings.
     apply Ret.
@@ -27,8 +27,8 @@ Module Basic.
   (** Fail to list the names in a folder. *)
   Definition list_coq_files_error (folder : LString.t)
     : Run.t (Basic.list_coq_files folder) None.
-    apply (Let (Unix.Run.list_files_error _)).
-    apply (Let (Unix.Run.log_ok _)).
+    apply (Let (System.Run.list_files_error _)).
+    apply (Let (System.Run.log_ok _)).
     apply Ret.
   Defined.
 
@@ -81,7 +81,7 @@ Module Full.
   Definition get_version_ok (repository : LString.t) (name : Name.t)
     (version : Version.t)
     : Run.t (Full.get_version repository name (Version.id version)) (Some version).
-    apply (Let (Unix.Run.read_file_ok _ (Version.description version))).
+    apply (Let (System.Run.read_file_ok _ (Version.description version))).
     destruct version.
     apply Ret.
   Defined.
@@ -101,7 +101,7 @@ Module Full.
   (** Compare two versions and get that the first is the latest. *)
   Definition max_version_ge (version1 version2 : Version.t)
     : Run.t (Full.max_version version1 version2) (Some version1).
-    apply (Let (Unix.Run.system_ok _ true)).
+    apply (Let (System.Run.system_ok _ true)).
     apply Ret.
   Defined.
 
