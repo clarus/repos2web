@@ -142,24 +142,28 @@ Module Full.
 End Full.
 
 (** The main function. *)
-Definition main : C unit :=
-  let repository := LString.s "repo-stable/packages" in
-  let! packages := Basic.get_packages repository in
-  match packages with
-  | None => log @@ LString.s "The packages cannot be listed."
-  | Some packages =>
-    let! full_packages := Full.get_packages repository packages in
-    let index_content := View.index full_packages in
-    let index_name := LString.s "html/index.html" in
-    let! is_success := System.write_file index_name index_content in
-    if is_success then
-      log (index_name ++ LString.s " generated.")
-    else
-      log (LString.s "Cannot generate " ++ index_name ++ LString.s ".")
+Definition main (argv : list LString.t) : C unit :=
+  match argv with
+  | [_; repository] =>
+    let repository := repository ++ LString.s "/packages" in
+    let! packages := Basic.get_packages repository in
+    match packages with
+    | None => log @@ LString.s "The packages cannot be listed."
+    | Some packages =>
+      let! full_packages := Full.get_packages repository packages in
+      let index_content := View.index full_packages in
+      let index_name := LString.s "html/index.html" in
+      let! is_success := System.write_file index_name index_content in
+      if is_success then
+        log (index_name ++ LString.s " generated.")
+      else
+        log (LString.s "Cannot generate " ++ index_name ++ LString.s ".")
+    end
+  | _ => log @@ LString.s "Exactly one argument expected (the repository folder)."
   end.
 
 Require Import Extraction.
 
 (** The extracted program. *)
-Definition repos2web : unit := Extraction.Lwt.run @@ Extraction.eval main.
+Definition repos2web : unit := Extraction.run main.
 Extraction "extraction/repos2web" repos2web.
