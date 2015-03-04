@@ -1,6 +1,6 @@
--R . Repos2Web
+-R src Repos2Web
 
-Main.v
-Model.v
-Scenarios.v
-View.v
+src/Main.v
+src/Model.v
+src/Scenarios.v
+src/View.v
