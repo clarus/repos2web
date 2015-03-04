@@ -23,7 +23,7 @@ Clone a Coq OPAM repository:
     cd extraction/
     git clone https://github.com/coq/repo-stable
 
-Run the program:
+Run the program (you need to install the `dpkg` tool, which should be available even on non-Debian based distributions):
 
     cd extraction/
     ./repos2web.native repo-stable
