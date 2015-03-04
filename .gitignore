@@ -3,3 +3,5 @@ Makefile.bak
 *.glob
 *.v.d
 *.vo
+*.aux
+.coq-native/
