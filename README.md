@@ -18,10 +18,10 @@ Compile the extracted OCaml code:
     curl -L https://github.com/clarus/coq-red-css/releases/download/coq-blog.1.0.2/style.min.css >html/style.min.css
     make
 
-Clone an [OPAM](http://opam.ocaml.org/) repository:
+Clone an Coq OPAM repository:
 
     cd extraction/
-    git clone https://github.com/ocaml/opam-repository
+    git clone https://github.com/coq/repo-stable
 
 Run the program:
 
