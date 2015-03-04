@@ -29,7 +29,7 @@ Definition header : LString.t :=
     <div class=""container-fluid"">
       <div class=""navbar navbar-default"" role=""navigation"">
         <div class=""navbar-header"">
-          <a class=""navbar-brand"" href=""/"">Coq packages</a>
+          <a class=""navbar-brand"" href=""/"">Coq OPAM</a>
         </div>
       </div>
       <div class=""row"">
@@ -38,9 +38,16 @@ Definition header : LString.t :=
 
 (** The title with the number of packages. *)
 Definition title (packages : FullPackages.t) : LString.t :=
-  let nb_packages : N := N.of_nat @@ List.length packages in
+  let nb_packages : N := N.of_nat @@ FullPackages.nb_packages packages in
+  let nb_versions : N := N.of_nat @@ FullPackages.nb_versions packages in
   LString.s "          <h1>" ++ LString.of_N 10 10 None nb_packages ++
-  LString.s " packages</h1>
+  LString.s " packages <small>" ++ LString.of_N 10 10 None nb_versions ++
+  LString.s " versions</small></h1>
+        <p>Activate the stable or unstable repositories:</p>
+        <pre>opam repo add coq-stable https://github.com/coq/repo-stable.git
+opam repo add coq-unstable https://github.com/coq/repo-unstable.git</pre>
+        <p>Install a package:</p>
+        <pre>opam install -j4 coq:package</pre>
 ".
 
 (** A row in the table of packages. *)
@@ -67,7 +74,8 @@ Definition table (packages : FullPackages.t) : LString.t :=
     | Gt => false
     end) in
   LString.s
-"          <table class=""table table-striped text-center"">
+"         <h2>Table</h2>
+          <table class=""table table-striped text-center"">
             <thead>
               <tr>
                 <td>Name</td>

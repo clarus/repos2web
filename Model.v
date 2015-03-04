@@ -111,6 +111,16 @@ Module FullPackages.
   (** A set of full packages is a list of full packages. *)
   Definition t := list FullPackage.t.
 
+  (** The number of packages. *)
+  Definition nb_packages (packages : t) : nat :=
+    List.length packages.
+
+  (** The number of versions. *)
+  Definition nb_versions (packages : t) : nat :=
+    List.fold_left (fun n package =>
+      List.length (FullPackage.versions package) + n)
+      packages 0.
+
   (** Force the last version of each package to be the head of the list of
       versions. *)
   Definition last_version_hd (packages : t) : t :=
