@@ -18,7 +18,7 @@ Compile the extracted OCaml code:
     curl -L https://github.com/clarus/coq-red-css/releases/download/coq-blog.1.0.2/style.min.css >html/style.min.css
     make
 
-Clone an Coq OPAM repository:
+Clone a Coq OPAM repository:
 
     cd extraction/
     git clone https://github.com/coq/repo-stable
@@ -26,7 +26,7 @@ Clone an Coq OPAM repository:
 Run the program:
 
     cd extraction/
-    ./repos2web.native opam-repository
+    ./repos2web.native repo-stable
     make serve
 
 You can now browse the result on [localhost:8000](http://localhost:8000/).
