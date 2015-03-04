@@ -162,8 +162,6 @@ Definition main (argv : list LString.t) : C unit :=
   | _ => log @@ LString.s "Exactly one argument expected (the repository folder)."
   end.
 
-Require Import Extraction.
-
 (** The extracted program. *)
 Definition repos2web : unit := Extraction.run main.
 Extraction "extraction/repos2web" repos2web.
