@@ -78,9 +78,9 @@ Definition table (packages : FullPackages.t) : LString.t :=
           <table class=""table table-striped text-center"">
             <thead>
               <tr>
-                <td>Name</td>
-                <td>Version</td>
-                <td>Description</td>
+                <td><strong>Name</strong></td>
+                <td><strong>Version</strong></td>
+                <td><strong>Description</strong></td>
               </tr>
             </thead>
             <tbody>
