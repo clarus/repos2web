@@ -44,9 +44,10 @@ Module Basic.
     match names with
     | [] => ret (Some [])
     | name :: names =>
-      let! package := get_package_of_name repository name in
-      let! packages := get_packages_of_names repository names in
-      match (package, packages) with
+      let! package_packages := join
+        (get_package_of_name repository name)
+        (get_packages_of_names repository names) in
+      match package_packages with
       | (Some package, Some packages) => ret @@ Some (package :: packages)
       | _ => ret None
       end
@@ -83,11 +84,12 @@ Module Full.
     match versions with
     | [] => ret []
     | version :: versions =>
-      let! version := get_version repository name version in
-      let! versions := get_versions repository name versions in
-      match version with
-      | None => ret versions
-      | Some version => ret (version :: versions)
+      let! version_versions := join
+        (get_version repository name version)
+        (get_versions repository name versions) in
+      match version_versions with
+      | (None, versions) => ret versions
+      | (Some version, versions) => ret (version :: versions)
       end
     end.
 
@@ -135,8 +137,10 @@ Module Full.
     match packages with
     | [] => ret []
     | package :: packages =>
-      let! full_package := get_package repository package in
-      let! full_packages := get_packages repository packages in
+      let! full_package_full_packages := join
+        (get_package repository package)
+        (get_packages repository packages) in
+      let (full_package, full_packages) := full_package_full_packages in
       ret (full_package :: full_packages)
     end.
 End Full.
