@@ -55,8 +55,9 @@ Module Basic.
       (Some packages).
     destruct packages as [|package packages].
     - apply Ret.
-    - apply (Let (get_package_of_name_ok repository package)).
-      apply (Let (get_packages_of_names_ok repository packages)).
+    - apply (Let (Join
+        (get_package_of_name_ok repository package)
+        (get_packages_of_names_ok repository packages))).
       apply Ret.
   Defined.
 
@@ -93,8 +94,9 @@ Module Full.
       versions.
     destruct versions as [|version versions].
     - apply Ret.
-    - apply (Let (get_version_ok repository name version)).
-      apply (Let (get_versions_ok repository name versions)).
+    - apply (Let (Join
+        (get_version_ok repository name version)
+        (get_versions_ok repository name versions))).
       apply Ret.
   Defined.
 
@@ -133,8 +135,9 @@ Module Full.
       (FullPackages.last_version_hd packages).
     destruct packages as [|package packages].
     - apply Ret.
-    - apply (Let (get_package_ok repository package)).
-      apply (Let (get_packages_ok repository packages)).
+    - apply (Let (Join
+        (get_package_ok repository package)
+        (get_packages_ok repository packages))).
       apply Ret.
   Defined.
 End Full.
