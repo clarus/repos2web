@@ -43,9 +43,9 @@ Definition title (packages : FullPackages.t) : LString.t :=
   LString.s "          <h1>" ++ LString.of_N 10 10 None nb_packages ++
   LString.s " packages <small>" ++ LString.of_N 10 10 None nb_versions ++
   LString.s " versions</small></h1>
-        <p>Activate the stable or unstable repositories:</p>
-        <pre>opam repo add coq-stable https://github.com/coq/repo-stable.git
-opam repo add coq-unstable https://github.com/coq/repo-unstable.git</pre>
+        <p>Activate the released or extra-dev repositories:</p>
+        <pre>opam repo add coq-released https://coq.inria.fr/opam/released
+opam repo add coq-extra-dev https://coq.inria.fr/opam/extra-dev</pre>
         <p>Install a package:</p>
         <pre>opam install -j4 coq:package</pre>
 ".

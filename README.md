@@ -4,7 +4,7 @@ The website of the OPAM packages for Coq.
 ## Run
 Install the dependencies:
 
-    opam repo add coq-stable https://github.com/coq/repo-stable.git
+    opam repo add coq-released https://coq.inria.fr/opam/released
     opam install -j4 coq:io:system
 
 Compile the Coq code:
@@ -21,12 +21,12 @@ Compile the extracted OCaml code:
 Clone a Coq OPAM repository:
 
     cd extraction/
-    git clone https://github.com/coq/repo-stable
+    git clone https://github.com/coq/opam-coq-archive
 
 Run the program (you need to install the `dpkg` tool, which should be available even on non-Debian based distributions):
 
     cd extraction/
-    ./repos2web.native repo-stable
+    ./repos2web.native opam-coq-archive/released
     make serve
 
 You can now browse the result on [localhost:8000](http://localhost:8000/).
